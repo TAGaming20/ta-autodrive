@@ -633,7 +633,6 @@ end)
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         ExecuteCommand(ADCommands.OSDToggle)
-TriggerEvent("autodrive:client:destination:freeroam")
     end
 end)
 
