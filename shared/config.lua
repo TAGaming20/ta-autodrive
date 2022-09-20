@@ -4,7 +4,7 @@ ADCommands                          = {}
 ADDefaults.UseNativeUI              = true
 ADDefaults.UseRadialMenu            = true
 ADDefaults.RegisterKeys             = true
-ADDefaults.EnableHotKeys            = false
+ADDefaults.EnableHotKeys            = false -- non registered hot keys not fully tested in this version
 
 ADDefaults.DefaultDestination       = "FreeRoam"
 ADDefaults.DefaultDriveStyleName    = "Safe"
@@ -13,8 +13,8 @@ ADDefaults.TagVehicleScanTime       = 3000 -- how long to scan for vehicles
 ADDefaults.UseMPH                   = true
 ADDefaults.MPH                      = 2.236936
 ADDefaults.KPH                      = 3.6
-ADDefaults.OnScreenDisplay          = true
-ADDefaults.OSDtimed                 = false
+ADDefaults.OnScreenDisplay          = true -- set this to true to have OSD on all the time
+ADDefaults.OSDtimed                 = true -- set this true to have OSD toggle off after 3 seconds
 ADDefaults.Subtitles                = true
 
 ADDefaults.OSDX                     = 0.69 -- OnScreenDisplay x location, {min = 0.0 , max = 1.0}
@@ -31,14 +31,15 @@ ADCommands.Fuel                     = "adfuel"
 ADCommands.Follow                   = "adfollow"
 ADCommands.Style                    = "adsetcarstyle"
 ADCommands.SetSpeed                 = "adsetcarspeed"
-ADCommands.MaxSpeed                 = "admaxcarspeed"
+ADCommands.PostedSpeed              = "adpostedspeed"
 ADCommands.ResetSpeed               = "adresetcarspeed"
 ADCommands.OSDToggle                = "adcarosd"
 ADCommands.Tag                      = "adtag"
 ADCommands.SpeedUp                  = "adspeedup"
 ADCommands.SpeedDown                = "adspeeddown"
 
-ADHotkeys                           = {}
+-- Non registered hotkeys are not fully tested
+ADHotkeys                           = {} -- These are still a work in progress and may not function in this version
 ADHotkeys.Start                     = 110   -- numpad 5
 ADHotkeys.Stop                      = 72    -- s
 ADHotkeys.Tag                       = 41    -- [

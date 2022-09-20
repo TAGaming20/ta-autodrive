@@ -7,6 +7,7 @@ ChosenSpeed             = ADDefaults.DefaultDriveSpeed
 SpeedUnits              = ADDefaults.MPH
 PostedLimits            = false
 
+IsPlayerInVehicle       = nil
 taggedBlip              = nil
 TargetVeh               = nil
 PedInTaggedVehicle      = nil
@@ -240,7 +241,8 @@ end
 -- ##############################################################################-- Destination Events -- Start
 RegisterNetEvent("autodrive:client:startautodrive")
 AddEventHandler("autodrive:client:startautodrive", function()
-    local playerPed = PlayerPedId()
+    local playerPed   = PlayerPedId()
+    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
     if ChosenDestination == "FreeRoam" then
         TriggerEvent("autodrive:client:destination:freeroam")
     elseif ChosenDestination == "Blip" then
@@ -256,9 +258,10 @@ end)
 -- ##############################################################################-- Destination Events -- FreeRoam
 RegisterNetEvent("autodrive:client:destination:freeroam")
 AddEventHandler("autodrive:client:destination:freeroam", function()
-    local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
-    if IsAutoDriveDisabled then
+    local playerPed   = PlayerPedId()
+    local playerVeh   = GetVehiclePedIsIn(playerPed, false)
+    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
+    if IsAutoDriveDisabled and IsPlayerInVehicle then
         IsAutoDriveDisabled = false
         TaskVehicleDriveWander(playerPed, playerVeh, ChosenSpeed/SpeedUnits, ChosenDrivingStyle)-- ChosenDrivingStyle)
         DestinationEvents("FreeRoam")
@@ -267,11 +270,13 @@ end)
 -- ##############################################################################-- Destination Events -- Waypoint
 RegisterNetEvent("autodrive:client:destination:waypoint")
 AddEventHandler("autodrive:client:destination:waypoint", function()
-    local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
+    local playerPed     = PlayerPedId()
+    local playerVeh     = GetVehiclePedIsIn(playerPed, false)
+    IsPedInVehicle      = IsPedInAnyVehicle(playerPed)
     IsAutoDriveDisabled = true
-    if IsAutoDriveDisabled then
-        if doesBlipExist then
+
+    if IsAutoDriveDisabled and IsPlayerInVehicle then
+        if DoesBlipExist(GetFirstBlipInfoId(8)) then
             IsAutoDriveDisabled = false
             local dx, dy, dz = table.unpack(GetBlipInfoIdCoord(GetFirstBlipInfoId(8))) -- GetBlipInfoIdCoord for player set map marker
             TaskVehicleDriveToCoord(playerPed, playerVeh, dx, dy, dz, ChosenSpeed/SpeedUnits, 0, GetEntityModel(playerVeh), ChosenDrivingStyle, 50.0)
@@ -285,21 +290,20 @@ end)
 -- ##############################################################################-- Destination Events -- Low Fuel
 RegisterNetEvent("autodrive:client:destination:fuel")
 AddEventHandler("autodrive:client:destination:fuel", function()
-    print(ChosenSpeed)
-    local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
+    local playerPed     = PlayerPedId()
+    local playerVeh     = GetVehiclePedIsIn(playerPed, false)
+    IsPlayerInVehicle   = IsPedInAnyVehicle(playerPed)
     IsAutoDriveDisabled = true
-
-    if IsAutoDriveDisabled then
+    if IsAutoDriveDisabled and IsPlayerInVehicle then
         IsAutoDriveDisabled = false
-        local coords = GetEntityCoords(playerPed)
-        local closest = 1000
+        local coords        = GetEntityCoords(playerPed)
+        local closest       = 1000
         local closestCoords = nil
 
         for _, gasStationCoords in pairs(ADDefaults.GasStations) do
             local dstcheck = GetDistanceBetweenCoords(coords, gasStationCoords)
             if dstcheck < closest then
-                closest = dstcheck
+                closest       = dstcheck
                 closestCoords = gasStationCoords
             end
         end
@@ -319,14 +323,15 @@ RegisterNetEvent("autodrive:client:destination:followcar")
 AddEventHandler("autodrive:client:destination:followcar", function()
     local playerPed = PlayerPedId()
     local playerVeh = GetVehiclePedIsIn(playerPed, false)
-    if DoesEntityExist(TargetVeh) then
+    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
+    if DoesEntityExist(TargetVeh) and IsPlayerInVehicle then
         IsAutoDriveDisabled = false
         -- local playerCoords = GetEntityCoords(TargetVeh)
         -- local targetCoords = GetEntityCoords(playerPed)
         -- local targetDistance = Vdist(playerCoords.x, playerCoords.y, playerCoords.z, targetCoords.x , targetCoords.y , targetCoords.z)
         -- local chaseDistance = nil
 
-        ChosenDrivingStyleName = "Code3"
+        ChosenDrivingStyleName = "Code1"
         ChosenDrivingStyle = get_value_for_key(Values, ChosenDrivingStyleName)
         TaskVehicleFollow(playerPed, playerVeh, TargetVeh, 150.0, ChosenDrivingStyle, 10)
 
@@ -375,11 +380,11 @@ end)
 -- ##############################################################################-- Driving Style Events -- Custom
 RegisterNetEvent("autodrive:client:drivingstyle:custom")
 AddEventHandler("autodrive:client:drivingstyle:custom", function()
-    local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
-    local dsCustomStyle = GetUserInput("Custom Driving Style", "")
+    local playerPed        = PlayerPedId()
+    local playerVeh        = GetVehiclePedIsIn(playerPed, false)
+    local dsCustomStyle    = GetUserInput("Custom Driving Style", "")
     Citizen.Wait(1000)
-    ChosenDrivingStyle = dsCustomStyle
+    ChosenDrivingStyle     = dsCustomStyle
     ChosenDrivingStyleName = "Custom" -- get_key_for_value(Values, ChosenDrivingStyle)
     SetDriveTaskDrivingStyle(playerPed, ChosenDrivingStyle) 
     TimedOSD()
@@ -413,10 +418,10 @@ end)
 -- ##############################################################################-- Speed Events -- Manual speed limit
 RegisterNetEvent("autodrive:client:setspeed")
 AddEventHandler("autodrive:client:setspeed", function()
-    local playerPed = PlayerPedId()
-    PostedLimits = false
+    local playerPed   = PlayerPedId()
+    PostedLimits      = false
     local manualSpeed = GetUserInput("Speed Limit", "", 10)
-    ChosenSpeed = tonumber(manualSpeed)
+    ChosenSpeed       = tonumber(manualSpeed)
     if not IsAutoDriveDisabled then
         SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
     end
@@ -426,17 +431,18 @@ end)
 RegisterNetEvent("autodrive:client:resetspeed")
 AddEventHandler("autodrive:client:resetspeed", function()
     local playerPed = PlayerPedId()
-    PostedLimits = false
-    ChosenSpeed = tonumber(Defaults.DefaultDriveSpeed)
+    PostedLimits    = false
+    ChosenSpeed     = tonumber(Defaults.DefaultDriveSpeed)
     TimedOSD()
 end)
 -- ##############################################################################-- Disable Autodrive Event --*********************--
 RegisterNetEvent("autodrive:client:stopautodrive")
 AddEventHandler("autodrive:client:stopautodrive", function()
-    local playerPed = PlayerPedId()
-    if not IsAutoDriveDisabled then -- brake or s key 72
+    local playerPed   = PlayerPedId()
+    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
+    if not IsAutoDriveDisabled and IsPlayerInVehicle then -- brake or s key 72
         IsAutoDriveDisabled = true
-        PostedLimits = false
+        PostedLimits        = false
         
         ClearPedTasks(playerPed)
         isAutodriveSubtitle()
@@ -450,10 +456,11 @@ end)
 
 RegisterNetEvent("autodrive:speedup")
 AddEventHandler("autodrive:speedup", function()
-    local playerPed = PlayerPedId()
-    local setSpeed = tonumber(ChosenSpeed + 5)
-    ChosenSpeed = setSpeed
-    if not IsAutoDriveDisabled then
+    local playerPed   = PlayerPedId()
+    local setSpeed    = tonumber(ChosenSpeed + 5)
+    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
+    ChosenSpeed       = setSpeed
+    if not IsAutoDriveDisabled and IsPlayerInVehicle then
         SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
     end
     subtitle("Speed: ~b~" .. tostring(ChosenSpeed), 3000)
@@ -462,10 +469,10 @@ end)
 RegisterNetEvent("autodrive:speeddown")
 AddEventHandler("autodrive:speeddown", function()
     local playerPed = PlayerPedId()
-    local setSpeed = tonumber(ChosenSpeed - 5)
+    local setSpeed  = tonumber(ChosenSpeed - 5)
     if tonumber(ChosenSpeed - 5) > 0 then setSpeed = tonumber(ChosenSpeed - 5) else setSpeed = 0 end
     ChosenSpeed = setSpeed
-    if not IsAutoDriveDisabled then
+    if not IsAutoDriveDisabled and IsPlayerInVehicle then
         SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
     end
     subtitle("Speed: ~b~" .. tostring(ChosenSpeed), 3000)
@@ -473,21 +480,19 @@ end)
 -- ##############################################################################-- Tag Vehicle --*********************--
 RegisterNetEvent("autodrive:client:destination:tagcar")
 AddEventHandler("autodrive:client:destination:tagcar", function()
-    CreateTag()
+    local playerPed   = PlayerPedId()
+    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
+
+    if IsPlayerInVehicle then CreateTag() end
 end)
---#######################################################################################################-- Commands --#############--
+--#######################################################################################################-- Hotkeys --#############--
 --#############################################################################################################################--
-
--- ##############################################################################-- Key Mapping
--- Edit keymapping in \AppData\Roaming\CitizenFX\fivem.cfg
--- ##############################################################################--
-
 if ADCommands.EnableHotKeys then
     local keyDebug = false
     Citizen.CreateThread(function()
         while true do
             Citizen.Wait(0)
-            if IsPedInAnyVehicle(PlayerPedId()) and not IsAutoDriveDisabled then
+            if IsPedInAnyVehicle(PlayerPedId()) then
                 if IsControlJustPressed(1, ADHotkeys.Start) then        -- Track car with key "numpad 5"
                     TriggerEvent("autodrive:client:startautodrive")
                     if keyDebug then print("^6Key Pressed numpad 5") end
@@ -544,7 +549,11 @@ end
 
 local vehicleOSDMode = false
 function ToggleOSDMode()
+   -- print("^2################################################################################ ToggleOSDMode(): ^2Initiate()")
+   -- print("vehicleOSDMode", vehicleOSDMode, "ADDefaults.OnScreenDisplay", ADDefaults.OnScreenDisplay, "ADDefaults.OSDtimed", ADDefaults.OSDtimed)
     vehicleOSDMode        = not vehicleOSDMode
+   -- print("Toggle vehicleOSDMode", vehicleOSDMode)
+
     local x               = ADDefaults.OSDX
     local y               = ADDefaults.OSDY
     local scaleSpacingX   = -.025 * 0
@@ -556,15 +565,14 @@ function ToggleOSDMode()
     local colorValue      = { 66, 182, 245 }
 
     local playerPed       = PlayerPedId()
+
     local drawText1       = nil
     local drawText2       = nil
     local drawText3       = nil
     local autodriveString = nil
-
     Citizen.CreateThread(function()
-        while vehicleOSDMode do
+        while vehicleOSDMode and IsPedInAnyVehicle(playerPed) do
             Citizen.Wait(0)
-            
             if IsAutoDriveDisabled then autodriveString = "Off" else autodriveString = "On" end
 
             string1                      = '~w~VehId ~b~%s~s~ ~w~| Plates ~b~%s~s~ ~w~| Ped ~b~%s~s~'
@@ -580,12 +588,19 @@ function ToggleOSDMode()
             string3                      = 'Style ~b~%s~s~ | Speed ~b~%s~s~ ~b~%s~s~'            
             drawText3 = Draw2DText(string.format(string3, ChosenDrivingStyleName, math.floor(ChosenSpeed), speedString), 4, colorText, 0.6,
                 x + 0.0 + scaleSpacingX , y + 0.050 + scaleSpacingY)
+
+            if not IsPedInAnyVehicle(playerPed) then vehicleOSDMode = false end
+
         end
     end)
 end
 
 function TimedOSD()
     if ADDefaults.OnScreenDisplay then
+        if not vehicleOSDMode and IsPedInAnyVehicle(PlayerPedId()) then
+            ToggleOSDMode()
+        end
+        
         if ADDefaults.OSDtimed then
             if vehicleOSDMode then ToggleOSDMode() end
             ToggleOSDMode()
@@ -618,7 +633,7 @@ end)
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
         ExecuteCommand(ADCommands.OSDToggle)
-
+TriggerEvent("autodrive:client:destination:freeroam")
     end
 end)
 

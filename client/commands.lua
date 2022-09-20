@@ -1,4 +1,9 @@
--- trigger autodrive event command
+-- ##############################################################################-- Key Mapping
+-- Registered Keymappings once enabled, won't delete after disabling
+-- Edit keymapping in \AppData\Roaming\CitizenFX\fivem.cfg
+-- ##############################################################################--
+
+-- Trigger autodrive event command
 RegisterCommand(ADCommands.Start, function()
     print("Start command")
     if IsAutoDriveDisabled then
@@ -8,10 +13,9 @@ RegisterCommand(ADCommands.Start, function()
     end
 end)
 
--- trigger wander autodrive event command
+-- Trigger freeroam autodrive event command
 RegisterCommand(ADCommands.FreeRoam, function()
     print("Free Roam command")
-
     local playerPed = PlayerPedId()
     local playerVeh = GetVehiclePedIsIn(playerPed, false) 
     IsAutoDriveDisabled = true
@@ -21,7 +25,7 @@ RegisterCommand(ADCommands.FreeRoam, function()
     end
 end)
 
--- trigger waypoint autodrive event command
+-- Trigger waypoint autodrive event command
 RegisterCommand(ADCommands.Waypoint, function()
     print("Waypoint command")
     local playerPed = PlayerPedId()
@@ -33,7 +37,7 @@ RegisterCommand(ADCommands.Waypoint, function()
     end
 end)
 
--- trigger autodrive to nearest gas station event command
+-- Trigger autodrive to nearest gas station event command
 RegisterCommand(ADCommands.Fuel, function()
     print("Fuel command")
     local playerPed = PlayerPedId()
@@ -45,7 +49,8 @@ RegisterCommand(ADCommands.Fuel, function()
         end
     end
 end)
--- driving style command
+
+-- Driving style command
 RegisterCommand(ADCommands.Style, function(source, args, rawcommand)  
     print("Set Driving Style command")
     local playerPed = PlayerPedId()
@@ -57,31 +62,16 @@ RegisterCommand(ADCommands.Style, function(source, args, rawcommand)
     end
 end)
 
--- max speed command. args[1] is speed type
-RegisterCommand(ADCommands.MaxSpeed, function(source, args, rawcommand) 
-    print("Max Speed command")
+-- Posted speed command
+RegisterCommand(ADCommands.PostedSpeed, function(source, args, rawcommand) 
+    print("Posted speed command")
     local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false) 
     if IsPedInAnyVehicle(playerPed, false) then   
-        print("Commands: ms: Executed")
-        local mph = 2.236936
-        if args[1] == "posted" then
-            postedLimits = true
-            while postedLimits do
-                Wait(1000)
-                local coords = GetEntityCoords(playerPed)
-                local street = GetStreetNameFromHashKey(GetStreetNameAtCoord(coords.x, coords.y, coords.z))
-                local speed = Street.Speed[street]
-                SetVehicleMaxSpeed(playerVeh, tonumber(speed/mph))
-                -- print("Commands: ms:    Street:    ^6" .. street .. "    ^7Speed:    ^6" .. speed)
-            end
-        else
-            SetVehicleMaxSpeed(playerVeh, tonumber(args[1]/mph))
-        end
+        TriggerEvent("autodrive:client:postedspeed")
     end
 end)
 
--- reset max speed to original value
+-- Reset max speed to original value
 RegisterCommand(ADCommands.ResetSpeed, function() 
     print("Reset Speed command")
     local playerPed = PlayerPedId()
@@ -89,11 +79,10 @@ RegisterCommand(ADCommands.ResetSpeed, function()
     postedLimits = false 
     if IsPedInAnyVehicle(playerPed, false) then   
         SetVehicleMaxSpeed(playerVeh, -1.0)
-        print("Commands: rs", GetVehicleHandlingFloat(playerVeh,"CHandlingData","fInitialDriveMaxFlatVel"))
     end
 end)
 
-
+-- Set speed command
 RegisterCommand(ADCommands.SetSpeed, function()
     print("Set Speed command")
     local playerPed = PlayerPedId()
@@ -102,12 +91,12 @@ RegisterCommand(ADCommands.SetSpeed, function()
     print("Debug", tostring(chosenSpeed))
 end)
 
--- autodrive off command
+-- Autodrive off command
 RegisterCommand(ADCommands.AutodriveOff, function(source, args, rawcommand)
     if not IsAutoDriveDisabled then TriggerEvent("autodrive:client:stopautodrive") end
 end)
 
--- register speed change commands
+-- Speed change commands
 RegisterCommand(ADCommands.SpeedUp, function(source, args, rawcommand) -- keymapping
     TriggerEvent("autodrive:speedup")
 end)
@@ -117,12 +106,12 @@ RegisterCommand(ADCommands.SpeedDown, function(source, args, rawcommand) -- keym
     TriggerEvent("autodrive:speeddown")
 end)
 
--- tag vehicle command
+-- Tag vehicle command
 RegisterCommand(ADCommands.Tag, function() -- keymapping
     TriggerEvent("autodrive:client:destination:tagcar")
 end)
 
--- follow car toggle command
+-- Follow car toggle command
 local trackCarTrue = false
 RegisterCommand(ADCommands.Follow, function() -- keymapping
     if not trackCarTrue then
@@ -140,6 +129,7 @@ RegisterCommand(ADCommands.Follow, function() -- keymapping
     print("command: followcar")
 end)
 
+-- Toggle osd command
 RegisterCommand(ADCommands.OSDToggle, function()
     if ADDefaults.OnScreenDisplay then
         if ADDefaults.OSDtimed then
@@ -156,6 +146,7 @@ RegisterCommand(ADCommands.OSDToggle, function()
     end
 end)
 
+-- Registered Keymappings
 if ADDefaults.RegisterKeys then
     print("Registering Autodrive keymaps")
     -- ##############################################################################-- tag car key mapping
