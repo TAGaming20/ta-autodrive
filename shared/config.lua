@@ -1,20 +1,35 @@
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- Autodrive Configurations ----
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+
 ADDefaults                          = {}
-ADCommands                          = {}
 
 ADDefaults.UseNativeUI              = true
 ADDefaults.UseRadialMenu            = true
+ADDefaults.UseQBMenu				= true
 ADDefaults.RegisterKeys             = true
 ADDefaults.EnableHotKeys            = false -- non registered hot keys not fully tested in this version
+ADDefaults.EnableCommands  			= true
 
-ADDefaults.DefaultDestination       = "FreeRoam"
+ADDefaults.UseQBCore = true
+
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Default Settings -----------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+ADDefaults.DefaultDestination       = "Freeroam"
+ADDefaults.DefaultBlip       		= 60
 ADDefaults.DefaultDriveStyleName    = "Safe"
 ADDefaults.DefaultDriveSpeed        = 25.0
 ADDefaults.TagVehicleScanTime       = 3000 -- how long to scan for vehicles
 ADDefaults.UseMPH                   = true
 ADDefaults.MPH                      = 2.236936
-ADDefaults.KPH                      = 3.6
+ADDefaults.KMH                      = 3.6
 ADDefaults.OnScreenDisplay          = true -- set this to true to have OSD on all the time
-ADDefaults.OSDtimed                 = true -- set this true to have OSD toggle off after 3 seconds
+ADDefaults.OSDtimed                 = false -- set this true to have OSD toggle off after 3 seconds
 ADDefaults.Subtitles                = true
 
 ADDefaults.OSDX                     = 0.69 -- OnScreenDisplay x location, {min = 0.0 , max = 1.0}
@@ -23,18 +38,15 @@ ADDefaults.OSDY                     = 0.75 -- OnScreenDisplay y location, {min =
 -- // Autodrive Commands
 -- // -- keymappings enabled won't delete after disabling
 -- //   -- delete keymappings in \AppData\Roaming\CitizenFX\fivem.cfg
+ADCommands                          = {}
 ADCommands.Start                    = "adstart"
-ADCommands.AutodriveOff             = "adstop"
-ADCommands.FreeRoam                 = "adfreeroam"
-ADCommands.Waypoint                 = "adwaypoint"
-ADCommands.Fuel                     = "adfuel"
-ADCommands.Follow                   = "adfollow"
-ADCommands.Style                    = "adsetcarstyle"
-ADCommands.SetSpeed                 = "adsetcarspeed"
-ADCommands.PostedSpeed              = "adpostedspeed"
-ADCommands.ResetSpeed               = "adresetcarspeed"
-ADCommands.OSDToggle                = "adcarosd"
+ADCommands.Stop             		= "adstop"
+ADCommands.Destination              = "addest"
+ADCommands.Style                    = "adstyle"
+ADCommands.Speed                    = "adspeed"
+ADCommands.Settings                 = "adsettings"
 ADCommands.Tag                      = "adtag"
+ADCommands.Follow                   = "adfollow"
 ADCommands.SpeedUp                  = "adspeedup"
 ADCommands.SpeedDown                = "adspeeddown"
 
@@ -78,4 +90,5 @@ ADDefaults.GasStations = {
 	vector3(1784.324, 3330.55, 41.253),
 	vector3(-66.48, -2532.57, 6.14),
 }
+
 

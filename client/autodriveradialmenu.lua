@@ -1,181 +1,224 @@
-local targetedVeh   = nil
 
 function AddRadialParkingOption()
     local playerPed     = PlayerPedId()
-    targetedVeh = TargetVeh
     if IsPedInAnyVehicle(playerPed) then                                    -- Radial menu item 1
+        local eventDest  = EventsTable.Destination
+        local eventStyle = EventsTable.Style
+        local eventSpeed = EventsTable.Speed
+        local eventType  = 'client'
+
+        local tableId = BlipDestination.BlipNames
         MenuItemId = exports['qb-radialmenu']:AddOption({
-            id = 'autodrive',
+            id    = 'autodrive',
             title = 'Autodrive',
-            icon = 'paper-plane',
-            type = 'client',
+            icon  = 'paper-plane',
+            type  = eventType,
             items =
             {
                 {   -- Autodrive: Submenu level 1: Item 1: Destination 
-                    id = 'destination',
-                    title = 'Destination Type',
-                    icon = 'map-location-dot',
+                    id = DestTable.id,
+                    title = DestTable.title,
+                    icon = DestTable.icon,
                     items =
                     {
                         {   -- Submenu level 2: Destination: Item 1: Free Roam
-                            id = 'destination_free_roam',
-                            title = 'Free Roam',
-                            icon = 'road',
-                            type = 'client',
-                            event = 'autodrive:client:destination:freeroam',
+                            id    = DestTable.Freeroam.id,
+                            title = DestTable.Freeroam.title,
+                            icon  = DestTable.Freeroam.icon,
+                            type  = eventType,
+                            event = eventDest,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Destination: Item 2: Waypoint
-                            id = 'destination_waypoint',
-                            title = 'Waypoint',
-                            icon = 'location-dot',
-                            type = 'client',
-                            event = 'autodrive:client:destination:waypoint',
+                            id    = DestTable.Waypoint.id,
+                            title = DestTable.Waypoint.title,
+                            icon  = DestTable.Waypoint.icon,
+                            type  = eventType,
+                            event = eventDest,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Destination: Item 3: Fuel
-                            id = 'destination_fuel',
-                            title = 'Fuel',
-                            icon = 'gas-pump',
-                            type = 'client',
-                            event = 'autodrive:client:destination:fuel',
+                            id    = DestTable.Fuel.id,
+                            title = DestTable.Fuel.title,
+                            icon  = DestTable.Fuel.icon,
+                            type  = eventType,
+                            event = eventDest,
                             shouldClose = true
+                        },
+                        {   -- Submenu level 2: Destination: Item 4: Blip
+                            id    = DestTable.Blip.id,
+                            title = DestTable.Blip.title,
+                            icon  = DestTable.Blip.icon,
+                            type  = eventType,
+                            event = eventDest,
+                            items = {
+                                {   -- Submenu level 3: Blips: Item 1: Police
+                                    id    = tableId.Police.sprite,
+                                    title = tableId.Police.title,
+                                    icon  = tableId.Police.icon,
+                                    type  = eventType,
+                                    event = eventDest,
+                                    shouldClose = true
+                                },
+                                {   -- Submenu level 3: Blips: Item 2: Hospital
+                                    id    = tableId.Hospital.sprite,
+                                    title = tableId.Hospital.title,
+                                    icon  = tableId.Hospital.icon,
+                                    type  = eventType,
+                                    event = eventDest,
+                                    shouldClose = true
+                                },
+                                {   -- Submenu level 3: Blips: Item 3: Ammunation
+                                    id    = tableId.Ammunation.sprite,
+                                    title = tableId.Ammunation.title,
+                                    icon  = tableId.Ammunation.icon,
+                                    type  = eventType,
+                                    event = eventDest,
+                                    shouldClose = true
+                                },
+                            }
                         },
                     },
                 },
                 {   -- Autodrive: Submenu level 1: Item 2: Driving Styles
-                    id = 'driving_style',
-                    title = 'Driving Style',
-                    icon = 'car-burst',
+                    id    = StylesTable.id,
+                    title = StylesTable.title,
+                    icon  = StylesTable.icon,
                     items =
                     {
                         {   -- Submenu level 2: Driving Styles: Item 1: Safe
-                            id = 'driving_style_safe',
-                            title = 'Safe',
-                            icon = 'helmet-safety',
-                            type = 'client',
-                            event = 'autodrive:client:drivingstyle:safe',
+                            id    = StylesTable.Safe.id,
+                            title = StylesTable.Safe.title,
+                            icon  = StylesTable.Safe.icon,
+                            type  = eventType,
+                            event = eventStyle,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Driving Styles: Item 2: Code1
-                            id = 'driving_style_Code1',
-                            title = 'Code 1',
-                            icon = 'circle-exclamation',
-                            type = 'client',
-                            event = 'autodrive:client:drivingstyle:code1',
+                            id    = StylesTable.Code1.id,
+                            title = StylesTable.Code1.title,
+                            icon  = StylesTable.Code1.icon,
+                            type  = eventType,
+                            event = eventStyle,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Driving Styles: Item 3: Aggressive
-                            id = 'driving_style_aggressive',
-                            title = 'Aggressive',
-                            icon = 'circle-exclamation',
-                            type = 'client',
-                            event = 'autodrive:client:drivingstyle:aggressive',
+                            id    = StylesTable.Aggressive.id,
+                            title = StylesTable.Aggressive.title,
+                            icon  = StylesTable.Aggressive.icon,
+                            type  = eventType,
+                            event = eventStyle,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Driving Styles: Item 4: Wreckless
-                            id = 'driving_style_wreckless',
-                            title = 'Wreckless',
-                            icon = 'triangle-exclamation',
-                            type = 'client',
-                            event = 'autodrive:client:drivingstyle:wreckless',
+                            id    = StylesTable.Wreckless.id,
+                            title = StylesTable.Wreckless.title,
+                            icon  = StylesTable.Wreckless.icon,
+                            type  = eventType,
+                            event = eventStyle,
                             shouldClose = true
                         },
-                        {   -- Submenu level 2: Driving Styles: Item 4: Wreckless
-                            id = 'driving_style_code2',
-                            title = 'Code 2',
-                            icon = 'triangle-exclamation',
-                            type = 'client',
-                            event = 'autodrive:client:drivingstyle:code2',
+                        {   -- Submenu level 2: Driving Styles: Item 5: Code3
+                            id    = StylesTable.Code3.id,
+                            title = StylesTable.Code3.title,
+                            icon  = StylesTable.Code3.icon,
+                            type  = eventType,
+                            event = eventStyle,
                             shouldClose = true
                         },
-                        {   -- Submenu level 2: Driving Styles: Item 5: Custom Input
-                            id = 'driving_style_custom',
-                            title = 'Custom Input',
-                            icon = 'keyboard',
-                            type = 'client',
-                            event = 'autodrive:client:drivingstyle:custom',
+                        {   -- Submenu level 2: Driving Styles: Item 6: Custom Input
+                            id    = StylesTable.Custom.id,
+                            title = StylesTable.Custom.title,
+                            icon  = StylesTable.Custom.icon,
+                            type  = eventType,
+                            event = eventStyle,
                             shouldClose = true
                         },
-
                     },
                 },
                 {   -- Autodrive: Submenu level 1: Item 3: Speed Limits
-                    id = 'speed_limit',
-                    title = 'Speed Limit',
-                    icon = 'gauge-high',
+                    id    = SpeedTable.id,
+                    title = SpeedTable.title,
+                    icon  = SpeedTable.icon,
                     items =
                     {
                         {   -- Submenu level 2: Speed Limits: Item 1: posted speed
-                            id = 'speed_limit_posted_speed',
+                            id    = 'postedspeed',
                             title = 'Road Limits',
-                            icon = 'car-on',
-                            type = 'client',
-                            event = 'autodrive:client:postedspeed',
+                            icon  = 'car-on',
+                            type  = eventType,
+                            event = eventSpeed,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Speed Limits: Item 1: manual speed
-                            id = 'speed_limit_manual_speed',
+                            id    = 'setspeed',
                             title = 'Input Limits',
-                            icon = 'keyboard',
-                            type = 'client',
-                            event = 'autodrive:client:setspeed',
+                            icon  = 'keyboard',
+                            type  = eventType,
+                            event = eventSpeed,
                             shouldClose = true
                         },
                         {   -- Submenu level 2: Speed Limits: Item 1: reset speed
-                            id = 'speed_limit_reset_speed',
+                            id    = 'resetspeed',
                             title = 'Reset Limits',
-                            icon = 'recycle',
-                            type = 'client',
-                            event = 'autodrive:client:resetspeed',
+                            icon  = 'recycle',
+                            type  = eventType,
+                            event = eventSpeed,
                             shouldClose = true
                         }
                     },
                 },
                 {   -- Autodrive: Submenu level 1: Item 4: Settings
-                id = 'autodrive_settings',
-                title = 'Autodrive Settings',
-                icon = 'wrench',
-                items =
+                    id = SettingsTable.id,
+                    title = SettingsTable.title,
+                    icon = SettingsTable.icon,
+                    items =
                 {
                     {   -- Submenu level 2: Settings : Item 1: Osd toggle
-                        id = 'settings_osd',
-                        title = 'OSD Toggle Setting',
-                        icon = 'car-on',
-                        type = 'client',
-                        event = 'autodrive:client:config:toggle:osd',
+                        id    = SettingsTable.ToggleOsd.id,
+                        title = SettingsTable.ToggleOsd.title,
+                        icon  = SettingsTable.ToggleOsd.icon,
+                        type  = eventType,
+                        event = 'ta-autodrive:client:settings:toggleosd',
                         shouldClose = true
                     },
-                    {   -- Submenu level 2: Settigs: Item 2: Osd timed toggle
-                        id = 'settings_osd_timed',
-                        title = 'OSD Timed Setting',
-                        icon = 'clock',
-                        type = 'client',
-                        event = 'autodrive:client:config:toggle:osdtimed',
+                    {   -- Submenu level 2: Settings: Item 2: Osd timed toggle
+                        id    = SettingsTable.TimedOsd.id,
+                        title = SettingsTable.TimedOsd.title,
+                        icon  = 'clock',
+                        type  = SettingsTable.TimedOsd.icon,
+                        event = 'ta-autodrive:client:settings:osdtimed',
                         shouldClose = true
                     },
-  
+                    {   -- Submenu level 2: Settings: Item 3: Speed Units Toggle
+                    id    = SettingsTable.SetSpeedUnits.id,
+                    title = SettingsTable.SetSpeedUnits.title,
+                    icon  = SettingsTable.SetSpeedUnits.icon,
+                    type  = eventType,
+                    event = 'ta-autodrive:client:settings:setspeedunits',
+                    shouldClose = true
+                    },
                 },
                 },
                 {   -- Autodrive: Submenu level 1: Item 5: OSD Toggle
-                id = 'osd_toggle',
+                id    = 'osd_toggle',
                 title = 'OSD Toggle',
-                icon = 'car-on',
-                type = 'client',
-                event = "autodrive:client:config:toggle:osd", -- ExecuteCommand(ADCommands.OSDToggle),
+                icon  = 'car-on',
+                type  = eventType,
+                event = "ta-autodrive:client:settings:osd", -- ExecuteCommand(ADCommands.OSDToggle),
                 shouldClose = true,
                 },
             }
         }, MenuItemId)
     end
-    if DoesEntityExist(targetedVeh) and IsPedInAnyVehicle(playerPed) then     -- Radial menu item 2
+    if DoesEntityExist(TargetVeh) and IsPedInAnyVehicle(playerPed) then     -- Radial menu item 2
         MenuItemId1 = exports['qb-radialmenu']:AddOption({
-            -- Submenu level 2: Destination: Item 4: track car
-            id = 'destination_track_car',
-            title = 'Track Car',
-            icon = 'car-burst',
-            type = 'client',
-            event = 'autodrive:client:destination:followcar',
+            -- Submenu level 1: Destination: Item 4: Follow car
+            id    = DestTable.Follow.id,
+            title = DestTable.Follow.title,
+            icon  = DestTable.Follow.icon,
+            type  = 'client',
+            event = EventsTable.Destination,
             shouldClose = true
         }, MenuItemId1)
     end

@@ -1,41 +1,69 @@
--- local QBCore = exports['qb-core']:GetCoreObject()
+local QBCore = nil
+if ADDefaults.UseQBCore then
+    QBCore = exports['qb-core']:GetCoreObject()
+end
 
-IsAutoDriveDisabled     = true
-ChosenDestination       = ADDefaults.DefaultDestination
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- Set Client Defaults ---------
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+
+-- DisplayDestination      = ADDefaults.DefaultDestination
+DisplayStyleName = ADDefaults.DefaultDriveStyleName
+DisplaySpeed            = ADDefaults.DefaultDriveSpeed
+IsAutoDriveEnabled      = false
+DisplayDestination      = ADDefaults.DefaultDestination
+
+ChosenBlip              = ADDefaults.DefaultBlip
 ChosenDrivingStyleName  = ADDefaults.DefaultDriveStyleName
+ChosenDrivingStyle      = 0
 ChosenSpeed             = ADDefaults.DefaultDriveSpeed
 SpeedUnits              = ADDefaults.MPH
+
+GameBlip = ADDefaults.DefaultBlip
+GameDestination         = 'freeroam'
+GameSpeed               = ChosenSpeed / SpeedUnits
 PostedLimits            = false
 
 IsPlayerInVehicle       = nil
-taggedBlip              = nil
-TargetVeh               = nil
-PedInTaggedVehicle      = nil
+
+---@type integer blip id
+TaggedBlip         = nil
+---@type integer vehicle id
+TargetVeh          = nil
+---@type boolean is vehicle tagged
+IsVehicleTagged    = false
+PedInTaggedVehicle = nil
+
 Values = {
-    ["Safe"] = 411,
-    ["Code1"] = 283,
+    ["Safe"]       = 411,
+    ["Code1"]      = 283,
     ["Aggressive"] = 318,
-    ["Wreckless"] = 786988, -- 524841,
-    ["Code3"] = 787007, -- 8388622, -- 8388614, -- 524863, -- 786492, --524703,
-    ["Chase"] = 262685,
-    ["Follow"] = 262719, --262687, --786972,
-    ["Custom"] = 0,
+    ["Wreckless"]  = 786988,
+    ["Code3"]      = 787007,
+    ["Chase"]      = 262685,
+    ["Follow"]     = 262719,
+    ["Custom"]     = ChosenDrivingStyle,
 }
 
-local vehicleTagged     = false
-local runTracker        = false
-local speedString       = nil
+local runTagger       = false
+local speedString       = ""
 
---#######################################################################################################-- Set Globals --#############--
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- Set Globals -----------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
--- @params table, value
+---@param t table
 function get_key_for_value(t, value)
     for k, v in pairs(t) do
         if v == value then return k end
     end
     return nil
 end
--- @params table, value
+---@params t table
 function get_value_for_key(t, key)
     for k, v in pairs(t) do
         if k == key then return v end
@@ -43,39 +71,44 @@ function get_value_for_key(t, key)
     return nil
 end
 
-
+-- set mph or kmh
 ChosenDrivingStyle = get_value_for_key(Values, ChosenDrivingStyleName)
-
 if ADDefaults.UseMPH then
     SpeedUnits = ADDefaults.MPH
     ChosenSpeed = ADDefaults.DefaultDriveSpeed
     speedString = "mph"
 else 
-    SpeedUnits = ADDefaults.KPH
+    SpeedUnits = ADDefaults.KMH
     ChosenSpeed = ADDefaults.DefaultDriveSpeed
-    speedString = "kph"
+    speedString = "kmh"
 end
 
---#######################################################################################################-- Functions --#############--
---#############################################################################################################################--
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- Functions -------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
--- ##############################################################################-- Subtitle function
-function subtitle(message, timer)
+-- #############################################################################################################################--
+-- ##########################################-------------------------------------- Subtitle function
+
+-- autodrive subtitles
+function Subtitle(message, timer)
     if ADDefaults.Subtitles then
         BeginTextCommandPrint("STRING")
         AddTextComponentString(message)
         EndTextCommandPrint(timer, true)
     end
 end
--- ##############################################################################-- isAutodrive subtitle function
+-- ##########################################-------------------------------------- isAutodrive subtitle function
+
 function isAutodriveSubtitle()
     local styleName = ChosenDrivingStyleName
     local autodriveBool = "false"
     if ADDefaults.Subtitles then
         BeginTextCommandPrint("STRING")
-        if not IsAutoDriveDisabled then
-            autodriveBool = ChosenDestination
-            
+        if IsAutoDriveEnabled then
+            autodriveBool = DisplayDestination:gsub("^%l", string.upper)
             AddTextComponentString(string.format("Autodrive ~y~%s~s~ ~y~%s~s~", autodriveBool, styleName))
         else
             autodriveBool = "Disabled"
@@ -84,7 +117,7 @@ function isAutodriveSubtitle()
         EndTextCommandPrint(3000, true)
     end
 end
--- ##############################################################################-- Get User Input function
+-- ##########################################-------------------------------------- Get User Input function
 function GetUserInput(windowTitle, defaultText, maxInputLength)
     -- Create the window title string.
     local resourceName = string.upper(GetCurrentResourceName())
@@ -99,6 +132,7 @@ function GetUserInput(windowTitle, defaultText, maxInputLength)
     Citizen.Wait(0)
     -- Wait for a result.
     while true do
+        Citizen.Wait(0)
         local keyboardStatus = UpdateOnscreenKeyboard();
         if keyboardStatus == 3 then -- not displaying input field anymore somehow
             return nil
@@ -111,47 +145,50 @@ function GetUserInput(windowTitle, defaultText, maxInputLength)
         end
     end
 end
--- ##############################################################################-- Print Settings function
-local function PrintSettings()
-    print(string.format( 'Destination ^3%s ^7| Style ^3%s ^7| Name ^3%s ^7| Speed ^3%s ^7',
-    ChosenDestination, ChosenDrivingStyle, ChosenDrivingStyleName, ChosenSpeed))
+-- ##########################################-------------------------------------- Print Settings function
+function PrintSettings()
+    print(string.format( 'Destination ^3%s ^7| Style ^3%s ^7| Name ^3%s ^7| Speed ^3%s ^7| GameSpeed ^3%s ^7| GameDestination ^3%s',
+        DisplayDestination:gsub("^%l", string.upper), ChosenDrivingStyle, ChosenDrivingStyleName, ChosenSpeed, ChosenSpeed/SpeedUnits, GameDestination))
 end
--- ##############################################################################-- Driving Style Events function
-local function DrivingStyleEvents(dsName)
+-- ##########################################-------------------------------------- Driving Style Events function
+---@param dsName string driving style name
+function DrivingStyleEvents(dsName)
     local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
 
-    ChosenDrivingStyleName = tostring(dsName)
+    ChosenDrivingStyleName = tostring(dsName:gsub("^%l", string.upper))
     ChosenDrivingStyle = get_value_for_key(Values, ChosenDrivingStyleName)
-    
-    SetDriveTaskDrivingStyle(playerPed, ChosenDrivingStyle)
 
-    subtitle("Driving Style: ~y~" .. dsName, 1000)
+    SetDriveTaskDrivingStyle(playerPed, ChosenDrivingStyle)
+    Subtitle("Driving Style: ~y~" .. ChosenDrivingStyleName, 1000)
     TimedOSD()
-    -- PrintSettings()
+    PrintSettings()
 end
--- ##############################################################################-- Destination Events function
-local function DestinationEvents(dest)
-    ChosenDestination = dest
+-- ##########################################-------------------------------------- Destination Events function
+
+---@param dest string destination name
+function DestinationEvents(dest)
+    local playerPed = PlayerPedId()
+    DisplayDestination = dest:gsub("^%l", string.upper)
     SetDriverAbility(playerPed, 1.0)
     isAutodriveSubtitle()
     TimedOSD()
     PrintSettings()
+    -- print(string.format("^2DestinationEvents^7: DisplayDestination ^3%s    ^7| dest ^3%s    ^7| GameDestination ^3%s", DisplayDestination, dest, GameDestination))
 end
--- ##############################################################################-- Remove target function
-local function RemoveTarget()
-    if DoesBlipExist(taggedBlip) then RemoveBlip(taggedBlip) end
-    TargetVeh = nil
-    vehicleTagged = false
+-- ##########################################-------------------------------------- Remove target function
+function RemoveTarget()
+    if DoesBlipExist(TaggedBlip) then RemoveBlip(TaggedBlip) end
+    TargetVeh = 0
+    IsVehicleTagged = false
     PedInTaggedVehicle = nil
-    taggedBlip = nil
-    subtitle("Target Removed", 3000)
+    TaggedBlip = 0
+    Subtitle("Target Removed", 3000)
 end
--- ##############################################################################-- Raycast function
+-- ##########################################-------------------------------------- Raycast function
 local raycastCounter = 0
 local hitCounter = 0
-local function raycast(ped)
-    runTracker = true
+function Raycast(ped)
+    runTagger = true
 
     raycastCounter = raycastCounter +1
     local whileCounter = 0
@@ -165,335 +202,93 @@ local function raycast(ped)
     -- run raycast while wait == true
     while wait do
         Citizen.Wait(100)
-        Citizen.SetTimeout(3000, function() wait = false end)
+        Citizen.SetTimeout(3000, function()
+            if entityHit == nil then
+                Subtitle("No vehicle ~y~Tagged", 3000)
+            end
+            wait = false 
+        end)
         RemoveTarget()
         whileCounter = whileCounter +1
-        hitCounter = hitCounter +1
+        hitCounter   = hitCounter +1
 
-        vehicle = GetVehiclePedIsIn(ped, false)
-        offSet = GetOffsetFromEntityInWorldCoords(ped, 0.0, 1.0, 0.0) -- distance start point
-        offSet2 = GetOffsetFromEntityInWorldCoords(ped, 0.0, 31.0, 0.0) -- distance end point
-        shapeTest = StartShapeTestCapsule(offSet.x, offSet.y, offSet.z, offSet2.x, offSet2.y, offSet2.z, 6.0, 10, vehicle, 0)
+        vehicle      = GetVehiclePedIsIn(ped, false)
+        offSet       = GetOffsetFromEntityInWorldCoords(ped, 0.0, 1.0, 0.0) -- distance start point
+        offSet2      = GetOffsetFromEntityInWorldCoords(ped, 0.0, 31.0, 0.0) -- distance end point
+        shapeTest    = StartShapeTestCapsule(offSet.x, offSet.y, offSet.z, offSet2.x, offSet2.y, offSet2.z, 6.0, 10, vehicle, 0)
         retval, hit, endCoords, surfaceNormal, entityHit = GetShapeTestResult(shapeTest)
         if hit == 1 then break end
     end
     -- wait = false
-    if entityHit ~= nil then
-        subtitle("No vehicle ~y~Tagged", 3000)
+    if entityHit == nil then
+        print(entityHit)
+        Subtitle("No vehicle ~y~Tagged", 3000)
     end
-    runTracker = false
+    runTagger = false
 
     return entityHit
 end
--- ##############################################################################-- Tag vehicle function
-local function TagVehicle()
+-- ##########################################-------------------------------------- Tag vehicle function
+function TagVehicle()
     local playerPed = PlayerPedId()
-    TargetVeh = raycast(playerPed)
+    TargetVeh = Raycast(playerPed)
     PedInTaggedVehicle = GetPedInVehicleSeat(TargetVeh, -1)
-    taggedBlip = AddBlipForEntity(TargetVeh)                                                        	
-    -- SetBlipFlashes(taggedBlip, true)  
-    SetBlipColour(taggedBlip, 5)
-    if DoesEntityExist(TargetVeh) then vehicleTagged = true end
+    TaggedBlip = AddBlipForEntity(TargetVeh)                                                        	
+    -- SetBlipFlashes(TaggedBlip, true)  
+    SetBlipColour(TaggedBlip, 5)
+    if DoesEntityExist(TargetVeh) then IsVehicleTagged = true end
 end
--- ##############################################################################-- Is vehicle tagged function
-local function GetVehicleTarget()
-    while not vehicleTagged do
+-- ##########################################-------------------------------------- Is vehicle tagged function
+function GetVehicleTarget()
+    while not IsVehicleTagged do
         Citizen.Wait(10)
-        subtitle("Scanning ~y~Vehicles", 3000)
-        if not runTracker then TagVehicle() end
-        if not vehicleTagged then break end
+        Subtitle("Scanning ~y~Vehicles", 3000)
+        if not runTagger then TagVehicle() end
+        if not IsVehicleTagged then break end
     end
 end
--- ##############################################################################-- Does target already exist function
-local function DoesTargetExist()
-    if DoesBlipExist(taggedBlip) then RemoveBlip(taggedBlip) end
+-- ##########################################-------------------------------------- Does target already exist function
+function DoesTargetExist()
+    if DoesBlipExist(TaggedBlip) then RemoveBlip(TaggedBlip) end
         TargetVeh = nil
-        vehicleTagged = false
+        IsVehicleTagged = false
         PedInTaggedVehicle = nil
-        taggedBlip = nil
-    if not runTracker then TagVehicle() end
+        TaggedBlip = nil
+    if not runTagger then TagVehicle() end
 end
--- ##############################################################################-- Create a vehicle tag function
-local createTagSpam = false
-local function CreateTag()
+-- ##########################################-------------------------------------- Create a vehicle tag function
+createTagSpam = false
+function CreateTag()
     if IsPedInAnyVehicle(PlayerPedId()) then
         if not createTagSpam then
             if DoesEntityExist(TargetVeh) then
                 RemoveTarget()
-            elseif not vehicleTagged then
+            elseif not IsVehicleTagged then
                 GetVehicleTarget()
             elseif DoesEntityExist(TargetVeh) == false then
                 DoesTargetExist()
             end
             if DoesEntityExist(TargetVeh) then 
-                subtitle("Vehicle ~y~Tagged", 3000)
+                Subtitle("Vehicle ~y~Tagged", 3000)
             end
         end
         createTagSpam = false
     end
 end
---#######################################################################################################-- Main Events --#####--
---#############################################################################################################################--
 
--- ##############################################################################-- Destination Events --#######################--
--- #############################################################################################################################--
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- Hotkeys ---------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
--- ##############################################################################-- Destination Events -- Start
-RegisterNetEvent("autodrive:client:startautodrive")
-AddEventHandler("autodrive:client:startautodrive", function()
-    local playerPed   = PlayerPedId()
-    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
-    if ChosenDestination == "FreeRoam" then
-        TriggerEvent("autodrive:client:destination:freeroam")
-    elseif ChosenDestination == "Blip" then
-        TriggerEvent("autodrive:client:engageblip")
-    elseif ChosenDestination == "Waypoint" then
-        TriggerEvent("autodrive:client:destination:waypoint")
-    elseif ChosenDestination == "Fuel" then
-        TriggerEvent("autodrive:client:destination:fuel")
-    end
-    SetDriverAbility(playerPed, 1.0)
-end)
-
--- ##############################################################################-- Destination Events -- FreeRoam
-RegisterNetEvent("autodrive:client:destination:freeroam")
-AddEventHandler("autodrive:client:destination:freeroam", function()
-    local playerPed   = PlayerPedId()
-    local playerVeh   = GetVehiclePedIsIn(playerPed, false)
-    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
-    if IsAutoDriveDisabled and IsPlayerInVehicle then
-        IsAutoDriveDisabled = false
-        TaskVehicleDriveWander(playerPed, playerVeh, ChosenSpeed/SpeedUnits, ChosenDrivingStyle)-- ChosenDrivingStyle)
-        DestinationEvents("FreeRoam")
-    end
-end)
--- ##############################################################################-- Destination Events -- Waypoint
-RegisterNetEvent("autodrive:client:destination:waypoint")
-AddEventHandler("autodrive:client:destination:waypoint", function()
-    local playerPed     = PlayerPedId()
-    local playerVeh     = GetVehiclePedIsIn(playerPed, false)
-    IsPedInVehicle      = IsPedInAnyVehicle(playerPed)
-    IsAutoDriveDisabled = true
-
-    if IsAutoDriveDisabled and IsPlayerInVehicle then
-        if DoesBlipExist(GetFirstBlipInfoId(8)) then
-            IsAutoDriveDisabled = false
-            local dx, dy, dz = table.unpack(GetBlipInfoIdCoord(GetFirstBlipInfoId(8))) -- GetBlipInfoIdCoord for player set map marker
-            TaskVehicleDriveToCoord(playerPed, playerVeh, dx, dy, dz, ChosenSpeed/SpeedUnits, 0, GetEntityModel(playerVeh), ChosenDrivingStyle, 50.0)
-            DestinationEvents("Waypoint")
-            PrintSettings()
-        else
-            subtitle("Please select a destination..", 3000)   
-        end
-    end
-end)
--- ##############################################################################-- Destination Events -- Low Fuel
-RegisterNetEvent("autodrive:client:destination:fuel")
-AddEventHandler("autodrive:client:destination:fuel", function()
-    local playerPed     = PlayerPedId()
-    local playerVeh     = GetVehiclePedIsIn(playerPed, false)
-    IsPlayerInVehicle   = IsPedInAnyVehicle(playerPed)
-    IsAutoDriveDisabled = true
-    if IsAutoDriveDisabled and IsPlayerInVehicle then
-        IsAutoDriveDisabled = false
-        local coords        = GetEntityCoords(playerPed)
-        local closest       = 1000
-        local closestCoords = nil
-
-        for _, gasStationCoords in pairs(ADDefaults.GasStations) do
-            local dstcheck = GetDistanceBetweenCoords(coords, gasStationCoords)
-            if dstcheck < closest then
-                closest       = dstcheck
-                closestCoords = gasStationCoords
-            end
-        end
-
-        TaskVehicleDriveToCoord(playerPed, playerVeh, closestCoords.x, closestCoords.y, closestCoords.z,
-            ChosenSpeed, 0, GetEntityModel(playerVeh), ChosenDrivingStyle, 15.0) -- 318 828
-        DestinationEvents("Fuel")
-    end
-end)
--- ##############################################################################-- Destination Events -- Blip
-RegisterNetEvent("autodrive:client:engageblip")
-AddEventHandler("autodrive:client:engageblip", function()
-    TriggerEvent("autodrive:client:destination:waypoint")
-end)
--- ##############################################################################-- Destination Events -- Track Car
-RegisterNetEvent("autodrive:client:destination:followcar")
-AddEventHandler("autodrive:client:destination:followcar", function()
-    local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
-    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
-    if DoesEntityExist(TargetVeh) and IsPlayerInVehicle then
-        IsAutoDriveDisabled = false
-        -- local playerCoords = GetEntityCoords(TargetVeh)
-        -- local targetCoords = GetEntityCoords(playerPed)
-        -- local targetDistance = Vdist(playerCoords.x, playerCoords.y, playerCoords.z, targetCoords.x , targetCoords.y , targetCoords.z)
-        -- local chaseDistance = nil
-
-        ChosenDrivingStyleName = "Code1"
-        ChosenDrivingStyle = get_value_for_key(Values, ChosenDrivingStyleName)
-        TaskVehicleFollow(playerPed, playerVeh, TargetVeh, 150.0, ChosenDrivingStyle, 10)
-
-        DestinationEvents("Follow Vehicle")
-    else 
-        print("^6Event Triggered: ^7autodrive:client:destination:followcar: no target vehicle")
-    end
-end)
--- ##############################################################################-- Driving Style Events --*********************--
--- --#############################################################################################################################--
-
--- ##############################################################################-- Driving Style Events -- Safe
-RegisterNetEvent("autodrive:client:drivingstyle:safe")
-AddEventHandler("autodrive:client:drivingstyle:safe", function()
-    DrivingStyleEvents("Safe")
-end)
--- ##############################################################################-- Driving Style Events -- Code1
-RegisterNetEvent("autodrive:client:drivingstyle:code1")
-AddEventHandler("autodrive:client:drivingstyle:code1", function()
-    DrivingStyleEvents("Code1")
-end)
--- ##############################################################################-- Driving Style Events -- Aggressive
-RegisterNetEvent("autodrive:client:drivingstyle:aggressive")
-AddEventHandler("autodrive:client:drivingstyle:aggressive", function()
-    DrivingStyleEvents("Aggressive")
-end)
--- ##############################################################################-- Driving Style Events -- Wreckless
-RegisterNetEvent("autodrive:client:drivingstyle:wreckless")
-AddEventHandler("autodrive:client:drivingstyle:wreckless", function()
-    DrivingStyleEvents("Wreckless")
-end)
--- ##############################################################################-- Driving Style Events -- Code3
-RegisterNetEvent("autodrive:client:drivingstyle:code3")
-AddEventHandler("autodrive:client:drivingstyle:code3", function()
-    DrivingStyleEvents("Code3")
-    ChosenSpeed = 60
-    if not IsAutoDriveDisabled then
-        SetDriveTaskCruiseSpeed(PlayerPedId(), ChosenSpeed/SpeedUnits)
-    end
-end)
--- ##############################################################################-- Driving Style Events -- Chase
-RegisterNetEvent("autodrive:client:drivingstyle:chase")
-AddEventHandler("autodrive:client:drivingstyle:chase", function()
-    DrivingStyleEvents("Chase")
-end)
--- ##############################################################################-- Driving Style Events -- Custom
-RegisterNetEvent("autodrive:client:drivingstyle:custom")
-AddEventHandler("autodrive:client:drivingstyle:custom", function()
-    local playerPed        = PlayerPedId()
-    local playerVeh        = GetVehiclePedIsIn(playerPed, false)
-    local dsCustomStyle    = GetUserInput("Custom Driving Style", "")
-    Citizen.Wait(1000)
-    ChosenDrivingStyle     = dsCustomStyle
-    ChosenDrivingStyleName = "Custom" -- get_key_for_value(Values, ChosenDrivingStyle)
-    SetDriveTaskDrivingStyle(playerPed, ChosenDrivingStyle) 
-    TimedOSD()
-    subtitle("Driving Style: ~y~Custom", 1000)
-end)
--- ##############################################################################-- Speed Limit Events --*********************--
---#############################################################################################################################--
-
--- ##############################################################################-- Speed Events -- Posted speed limit
-RegisterNetEvent("autodrive:client:postedspeed")
-AddEventHandler("autodrive:client:postedspeed", function()
-    local playerPed = PlayerPedId()
-    local playerVeh = GetVehiclePedIsIn(playerPed, false)
-    Citizen.CreateThread(function()
-        if IsPedInAnyVehicle(playerPed, false) then   
-            PostedLimits = true
-            if PostedLimits then
-                while PostedLimits do
-                    Citizen.Wait(1000)
-                    local coords = GetEntityCoords(playerPed)
-                    local street = GetStreetNameFromHashKey(GetStreetNameAtCoord(coords.x, coords.y, coords.z))
-                    local speed  = Street.Speed[street]
-                    ChosenSpeed  = tonumber(speed)
-                    SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
-                    print("event: posted speed:    Street:    ^6" .. street .. "    ^7Speed:    ^6" .. speed, "ChosenSpeed", ChosenSpeed/SpeedUnits, GetEntitySpeed(playerVeh)*SpeedUnits)
-                end
-            end
-        end
-    end)
-end)
--- ##############################################################################-- Speed Events -- Manual speed limit
-RegisterNetEvent("autodrive:client:setspeed")
-AddEventHandler("autodrive:client:setspeed", function()
-    local playerPed   = PlayerPedId()
-    PostedLimits      = false
-    local manualSpeed = GetUserInput("Speed Limit", "", 10)
-    ChosenSpeed       = tonumber(manualSpeed)
-    if not IsAutoDriveDisabled then
-        SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
-    end
-    subtitle("Manual Speed:    ~y~" .. manualSpeed, 1000)
-end)
--- ##############################################################################-- Speed Events -- Reset speed limit
-RegisterNetEvent("autodrive:client:resetspeed")
-AddEventHandler("autodrive:client:resetspeed", function()
-    local playerPed = PlayerPedId()
-    PostedLimits    = false
-    ChosenSpeed     = tonumber(Defaults.DefaultDriveSpeed)
-    TimedOSD()
-end)
--- ##############################################################################-- Disable Autodrive Event --*********************--
-RegisterNetEvent("autodrive:client:stopautodrive")
-AddEventHandler("autodrive:client:stopautodrive", function()
-    local playerPed   = PlayerPedId()
-    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
-    if not IsAutoDriveDisabled and IsPlayerInVehicle then -- brake or s key 72
-        IsAutoDriveDisabled = true
-        PostedLimits        = false
-        
-        ClearPedTasks(playerPed)
-        isAutodriveSubtitle()
-        TimedOSD()
-    end
-end)
---#######################################################################################################-- Commands --#############--
---#############################################################################################################################--
-
---#######################################################################################################--
-
-RegisterNetEvent("autodrive:speedup")
-AddEventHandler("autodrive:speedup", function()
-    local playerPed   = PlayerPedId()
-    local setSpeed    = tonumber(ChosenSpeed + 5)
-    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
-    ChosenSpeed       = setSpeed
-    if not IsAutoDriveDisabled and IsPlayerInVehicle then
-        SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
-    end
-    subtitle("Speed: ~b~" .. tostring(ChosenSpeed), 3000)
-end)
-
-RegisterNetEvent("autodrive:speeddown")
-AddEventHandler("autodrive:speeddown", function()
-    local playerPed = PlayerPedId()
-    local setSpeed  = tonumber(ChosenSpeed - 5)
-    if tonumber(ChosenSpeed - 5) > 0 then setSpeed = tonumber(ChosenSpeed - 5) else setSpeed = 0 end
-    ChosenSpeed = setSpeed
-    if not IsAutoDriveDisabled and IsPlayerInVehicle then
-        SetDriveTaskCruiseSpeed(playerPed, ChosenSpeed/SpeedUnits)
-    end
-    subtitle("Speed: ~b~" .. tostring(ChosenSpeed), 3000)
-end)
--- ##############################################################################-- Tag Vehicle --*********************--
-RegisterNetEvent("autodrive:client:destination:tagcar")
-AddEventHandler("autodrive:client:destination:tagcar", function()
-    local playerPed   = PlayerPedId()
-    IsPlayerInVehicle = IsPedInAnyVehicle(playerPed)
-
-    if IsPlayerInVehicle then CreateTag() end
-end)
---#######################################################################################################-- Hotkeys --#############--
---#############################################################################################################################--
 if ADCommands.EnableHotKeys then
     local keyDebug = false
     Citizen.CreateThread(function()
         while true do
             Citizen.Wait(0)
             if IsPedInAnyVehicle(PlayerPedId()) then
-                if IsControlJustPressed(1, ADHotkeys.Start) then        -- Track car with key "numpad 5"
+                if IsControlJustPressed(1, ADHotkeys.Start) then        -- Tag car with key "numpad 5"
                     TriggerEvent("autodrive:client:startautodrive")
                     if keyDebug then print("^6Key Pressed numpad 5") end
                 end
@@ -502,14 +297,14 @@ if ADCommands.EnableHotKeys then
                     if keyDebug then print("^6Key Pressed s") end
                 end
                 if IsControlJustPressed(1, ADHotkeys.Tag) then          -- Tag car with key "["
-                    if not trackCarTrue then
+                    if not tagCarTrue then
                         TriggerEvent("autodrive:client:destination:followcar")
-                        trackCarTrue = true
-                        subtitle("Tracking ~y~Vehicle", 3000)
+                        tagCarTrue = true
+                        Subtitle("Tagging ~y~Vehicle", 3000)
                         if keyDebug then print("^6Key Pressed [") end
                     else
                         TriggerEvent("autodrive:client:stopautodrive")
-                        trackCarTrue = false
+                        tagCarTrue = false
                     end
                 end
             if IsControlJustPressed(1, ADHotkeys.Follow) then           -- FOllow car with key "]""
@@ -529,10 +324,11 @@ if ADCommands.EnableHotKeys then
     end)
 end
 
-
---#######################################################################################################-- On Screen Display --#############--
---#############################################################################################################################--
-
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- On Screen Display -----------
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 local function Draw2DText(content, font, colour, scale, x, y)
     SetTextFont(font)
@@ -549,10 +345,7 @@ end
 
 local vehicleOSDMode = false
 function ToggleOSDMode()
-   -- print("^2################################################################################ ToggleOSDMode(): ^2Initiate()")
-   -- print("vehicleOSDMode", vehicleOSDMode, "ADDefaults.OnScreenDisplay", ADDefaults.OnScreenDisplay, "ADDefaults.OSDtimed", ADDefaults.OSDtimed)
     vehicleOSDMode        = not vehicleOSDMode
-   -- print("Toggle vehicleOSDMode", vehicleOSDMode)
 
     local x               = ADDefaults.OSDX
     local y               = ADDefaults.OSDY
@@ -570,10 +363,20 @@ function ToggleOSDMode()
     local drawText2       = nil
     local drawText3       = nil
     local autodriveString = nil
+
+    if SpeedUnits == ADDefaults.MPH then
+        -- print("ToggleOSDMode(): SpeedUnits", SpeedUnits)
+        speedString = "mph"
+    else
+        -- print("ToggleOSDMode(): SpeedUnits", SpeedUnits)
+
+        speedString = "kmh"
+    end
     Citizen.CreateThread(function()
         while vehicleOSDMode and IsPedInAnyVehicle(playerPed) do
             Citizen.Wait(0)
-            if IsAutoDriveDisabled then autodriveString = "Off" else autodriveString = "On" end
+
+            if not IsAutoDriveEnabled then autodriveString = "Off" else autodriveString = "On" end
 
             string1                      = '~w~VehId ~b~%s~s~ ~w~| Plates ~b~%s~s~ ~w~| Ped ~b~%s~s~'
             if DoesEntityExist(TargetVeh) then 
@@ -582,7 +385,7 @@ function ToggleOSDMode()
                     x + 0.0 + scaleSpacingX, y + 0.0 + scaleSpacingY) end
 
             string2                      = 'Autodrive ~b~%s~s~ | Destination ~b~%s~s~'
-            drawText2 = Draw2DText(string.format(string2, autodriveString, ChosenDestination), 4, colorText, 0.6,
+            drawText2 = Draw2DText(string.format(string2, autodriveString, DisplayDestination), 4, colorText, 0.6,
                 x + 0.0 + scaleSpacingX, y + 0.025 + scaleSpacingY)
 
             string3                      = 'Style ~b~%s~s~ | Speed ~b~%s~s~ ~b~%s~s~'            
@@ -590,7 +393,6 @@ function ToggleOSDMode()
                 x + 0.0 + scaleSpacingX , y + 0.050 + scaleSpacingY)
 
             if not IsPedInAnyVehicle(playerPed) then vehicleOSDMode = false end
-
         end
     end)
 end
@@ -610,29 +412,17 @@ function TimedOSD()
     end
 end
 
-RegisterNetEvent("autodrive:client:config:toggle:osd")
-AddEventHandler("autodrive:client:config:toggle:osd", function()
-    ADDefaults.OnScreenDisplay = not ADDefaults.OnScreenDisplay
-    ExecuteCommand(ADCommands.OSDToggle)
-end)
-
-RegisterNetEvent("autodrive:client:config:toggle:osdtimed")
-AddEventHandler("autodrive:client:config:toggle:osdtimed", function()
-    ADDefaults.OSDtimed = not ADDefaults.OSDtimed
-    ExecuteCommand(ADCommands.OSDToggle)
-end)
-
-
---#######################################################################################################-- Cleanup --#############--
---#############################################################################################################################--
-
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+----------------------------------------------------------------------------------------------------------- Cleanup ---------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------------------------------------------------
 
 --*********************----*********************----*********************--
 --*********************-- Disable/Cleanup Events --*********************--
 -- ##############################################################################-- onResoureStart
 AddEventHandler('onResourceStart', function(resource)
     if resource == GetCurrentResourceName() then
-        ExecuteCommand(ADCommands.OSDToggle)
     end
 end)
 
@@ -641,18 +431,19 @@ AddEventHandler('onResourceStop', function(resource)
     local playerPed = PlayerPedId()
     local playerVeh = GetVehiclePedIsIn(playerPed, false)
     if resource == GetCurrentResourceName() then
-        IsAutoDriveDisabled = true
-        PostedLimits = false
-
-        ClearPedTasks(playerPed)
         TriggerEvent("autodrive:client:stopautodrive")
-
+        IsAutoDriveEnabled = false
+        PostedLimits = false
+        SetBlipRoute(GetClosestBlipOfType(ChosenBlip), false)
+        ClearPedTasks(playerPed)
         if ADDefaults.UseRadialMenu and MenuItemId ~=nil then -- remove from radial menu
             exports['qb-radialmenu']:RemoveOption(MenuItemId)
             exports['qb-radialmenu']:RemoveOption(MenuItemId1)
             MenuItemId = nil
         end
-
+        TriggerEvent('autodrive:client:qbmenu:closemenu')
         isAutodriveSubtitle()
     end
 end)
+
+
