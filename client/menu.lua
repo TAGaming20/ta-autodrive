@@ -18,9 +18,9 @@ function FirstItem(menu)
         if IsPedInAnyVehicle(playerPed, false) then
             if item == toggle then
                 if not IsAutoDriveEnabled then
-                    TriggerEvent("ta-autodrive:client:startautodrive")
+                    TriggerEvent(EventsTable.Start)
                 elseif IsAutoDriveEnabled then
-                    TriggerEvent("ta-autodrive:client:stopautodrive")
+                    TriggerEvent(EventsTable.Stop)
                 end
             end
         end
@@ -43,46 +43,46 @@ function SecondItem(menu) -- Driving style menu item
     local dsCode3           = NativeUI.CreateItem("Code 3", "")
     local dsChase           = NativeUI.CreateItem("Chase", "")
     local dsCustom          = NativeUI.CreateItem("Custom Input", "")
-    local eventStyle        = 'ta-autodrive:client:style'
+    local eventStyle        = EventsTable.Style.name
     -- Driving style Submenu item 1 Safe
     dsSafe.Activated = function(sender, item)
         if item == dsSafe then
-            ChosenDrivingStyleName = StylesTable.Safe.id
+            ChosenDrivingStyleName = StylesTable.Args.Safe.id
             TriggerEvent(eventStyle, ChosenDrivingStyleName)
     end end
 
     -- Driving style Submenu item 2 Code1
     dsCode1.Activated = function(sender, item)
         if item == dsCode1 then
-            ChosenDrivingStyleName = StylesTable.Code1.id
+            ChosenDrivingStyleName = StylesTable.Args.Code1.id
             TriggerEvent(eventStyle, ChosenDrivingStyleName)
     end end
 
     -- Driving style Submenu item 5 Code3
     dsCode3.Activated = function(sender, item)
         if item == dsCode3 then
-            ChosenDrivingStyleName = StylesTable.Code3.id
+            ChosenDrivingStyleName = StylesTable.Args.Code3.id
             TriggerEvent(eventStyle, ChosenDrivingStyleName)
         end end
 
     -- Driving style Submenu item 3 Aggressive
     dsAggressive.Activated = function(sender, item)
         if item == dsAggressive then
-            ChosenDrivingStyleName = StylesTable.Aggressive.id
+            ChosenDrivingStyleName = StylesTable.Args.Aggressive.id
             TriggerEvent(eventStyle, ChosenDrivingStyleName)
     end end
 
     -- Driving style Submenu item 4 Wreckless
     dsWreckless.Activated = function(sender, item)
         if item == dsWreckless then
-            ChosenDrivingStyleName = StylesTable.Wreckless.id
+            ChosenDrivingStyleName = StylesTable.Args.Wreckless.id
             TriggerEvent(eventStyle, ChosenDrivingStyleName)
     end end
 
     -- Driving style Submenu item 6 Chase
     dsChase.Activated = function(sender, item)
         if item == dsChase then
-            ChosenDrivingStyleName = StylesTable.Chase.id
+            ChosenDrivingStyleName = StylesTable.Args.Chase.id
             TriggerEvent(eventStyle, ChosenDrivingStyleName)
         end end
 
@@ -137,14 +137,14 @@ function ThirdItem(menu) -- Select destination
     local blipAmmunation = NativeUI.CreateItem("Ammunation", "")
     local blipGarage     = NativeUI.CreateItem("Garage", "")
     
-    local eventDest      = 'ta-autodrive:client:destination'
-    local stopAD         = function() TriggerEvent("ta-autodrive:client:stopautodrive") end
+    local eventDest      = EventsTable.Destination.name
+    local stopAD         = function() TriggerEvent(EventsTable.Stop) end
     -- Destination Submenu item 1 Freeroam
     dtFreeroam.Activated = function(sender, item)
         if item == dtFreeroam then
             stopAD()
-            DisplayDestination = DestTable.Freeroam.title
-            local args         = DestTable.Freeroam.id
+            DisplayDestination = DestTable.Args.Freeroam.title
+            local args         = DestTable.Args.Freeroam.id
             TriggerEvent(eventDest, args)
         end end
 
@@ -152,8 +152,8 @@ function ThirdItem(menu) -- Select destination
     dtWaypoint.Activated = function(sender, item)
         if item == dtWaypoint then
             stopAD()
-            DisplayDestination = DestTable.Waypoint.title
-            local args         = DestTable.Waypoint.id
+            DisplayDestination = DestTable.Args.Waypoint.title
+            local args         = DestTable.Args.Waypoint.id
             TriggerEvent(eventDest, args)
         end end
 
@@ -169,8 +169,8 @@ function ThirdItem(menu) -- Select destination
     dtFuel.Activated = function(sender, item)
         if item == dtFuel then
             stopAD()
-            DisplayDestination = DestTable.Fuel.title
-            local args         = DestTable.Fuel.id
+            DisplayDestination = DestTable.Args.Fuel.title
+            local args         = DestTable.Args.Fuel.id
             TriggerEvent(eventDest, args)
         end end
 
@@ -178,16 +178,16 @@ function ThirdItem(menu) -- Select destination
     dtTag.Activated = function(sender, item)
         if item == dtTag then
             stopAD()
-            DisplayDestination = DestTable.Tag.title
-            local args         = DestTable.Tag.id
+            DisplayDestination = DestTable.Args.Tag.title
+            local args         = DestTable.Args.Tag.id
             TriggerEvent(eventDest, args)
         end end
             -- Destination Submenu item 6 Follow Car
     dtFollow.Activated = function(sender, item)
         if item == dtFollow then
             stopAD()
-            DisplayDestination = DestTable.Follow.title
-            local args         = DestTable.Follow.id
+            DisplayDestination = DestTable.Args.Follow.title
+            local args         = DestTable.Args.Follow.id
             TriggerEvent(eventDest, args)
         end end
 
@@ -249,12 +249,12 @@ function speedLimiter(menu)
     local smiManualSpeed  = NativeUI.CreateItem("Manual Speed Limit", "")
     local smiResetSpeed   = NativeUI.CreateItem("Reset Speed Limit", "")
 
-    local eventSpeed = 'ta-autodrive:client:speed'
+    local eventSpeed = EventsTable.Speed.name
     -- Driving Style Submenu item 1 Posted Speed Limit
     smiPostedSpeed.Activated = function(sender, item)
         if item == smiPostedSpeed then
             PostedLimits = true
-            TriggerEvent(eventSpeed, SpeedTable.PostedSpeed.id)
+            TriggerEvent(eventSpeed, SpeedTable.Args.PostedSpeed.id)
     end end
 
     -- Driving Style Submenu item 2 Manul Speed Limit
@@ -273,7 +273,7 @@ function speedLimiter(menu)
     -- Driving Style Submenu item 3 Reset Speed Limit
     smiResetSpeed.Activated = function(sender, item)
         if item == smiResetSpeed then
-            TriggerEvent(eventSpeed, SpeedTable.ResetSpeed.id)
+            TriggerEvent(eventSpeed, SpeedTable.Args.ResetSpeed.id)
         end end
 
     submenu:AddItem(smiPostedSpeed)
@@ -285,47 +285,141 @@ end
 
 function OSDToggleSettings(menu)
     local submenu             = _menuPool:AddSubMenu(menu, "~y~Settings", "-- Open Settings Submenu --")
-    local timedOsd      = NativeUI.CreateItem("OSD Timed", "-- Toggle OSD Timed on/off --")
+    local timedOsd            = NativeUI.CreateItem("OSD Timed", "-- Toggle OSD Timed on/off --")
     local toggleOsd           = NativeUI.CreateItem("OSD Toggle", "-- Toggle OSD Default on/off --")
     local toggleSpeedUnits    = NativeUI.CreateItem("Speed Units Toggle", "-- Toggle MPH/KMH --")
-    local eventSettings       = EventsTable.Settings
+    local driverCreation      = NativeUI.CreateItem("Driver Creation", "-- Toggle Drivers --")
+    local driverForced        = NativeUI.CreateItem("Driver Forced", "-- Force Drivers --")
+    local driverVisibility    = NativeUI.CreateItem("Driver Visible", "-- Toggle Visiblity --")
+    local eventSettings       = EventsTable.Settings.name
     toggleOsd.Activated = function(sender, item)
         if item == toggleOsd then
-            TriggerEvent(eventSettings, SettingsTable.ToggleOsd.id)
-            -- Subtitle("Toggle OSD ~y~" .. tostring(ADDefaults.OnScreenDisplay), 3000)
+            TriggerEvent(eventSettings, SettingsTable.Args.ToggleOsd.id)
         end end
     timedOsd.Activated = function(sender, item)
         if item == timedOsd then
-            TriggerEvent(eventSettings, SettingsTable.TimedOsd.id)
-            -- Subtitle("Toggle OSD Timed ~y~" .. tostring(ADDefaults.OSDtimed), 3000)
+            TriggerEvent(eventSettings, SettingsTable.Args.TimedOsd.id)
         end end
     toggleSpeedUnits.Activated = function(sender, item)
         if item == toggleSpeedUnits then
-            TriggerEvent(eventSettings, SettingsTable.SetSpeedUnits.id)
-
+            TriggerEvent(eventSettings, SettingsTable.Args.SetSpeedUnits.id)
         end end
+    driverCreation.Activated = function(sender, item)
+        if item == driverCreation then
+            TriggerEvent(eventSettings, SettingsTable.Args.DriverCreate.id)
+        end end
+    driverForced.Activated = function(sender, item)
+        if item == driverForced then
+            TriggerEvent(eventSettings, SettingsTable.Args.DriverForced.id)
+        end end
+    driverVisibility.Activated = function(sender, item)
+        if item == driverVisibility then
+            TriggerEvent(eventSettings, SettingsTable.Args.DriverVisible.id)
+        end end
+    
     submenu:AddItem(toggleOsd)
     submenu:AddItem(timedOsd)
     submenu:AddItem(toggleSpeedUnits)
+    submenu:AddItem(driverCreation)
+    submenu:AddItem(driverForced)
+    submenu:AddItem(driverVisibility)
 end
 
 function OSDToggle(menu)
     local toggleOSD = NativeUI.CreateItem("OSD Toggle", "-- Toggle OSD on/off --")
     toggleOSD.Activated = function(sender, item)
         if item == toggleOSD then
-            TriggerEvent(EventsTable.Settings, SettingsTable.OSD.id)
+            TriggerEvent(EventsTable.Settings.name, SettingsTable.Args.OSD.id)
         end end
     menu:AddItem(toggleOSD)
 end
 
-FirstItem(mainMenu)
-SecondItem(mainMenu)
-ThirdItem(mainMenu)
-speedLimiter(mainMenu)
-OSDToggleSettings(mainMenu)
-OSDToggle(mainMenu)
-_menuPool:RefreshIndex()
+RegisterNetEvent('ta-autodrive:nativeui')
+AddEventHandler('ta-autodrive:nativeui', function()
+    if ADDefaults.UseNativeUI then
+        -- print("^6############################################################################ NativeUI Menu allowed")
 
+        if ADDefaults.UseQBCore then
+            -- print("^6############################################################################ NativeUI Menu allowed")
+            if Config.RequireParts then
+                if IsPedInAnyVehicle(PlayerPedId(), false) then
+                    if not IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_kit) then
+                        -- print("ad_kit not installed")
+                        Subtitle("Autodrive ~r~Not Installed", 3000)
+                        return
+                    end
+                end
+            end
+            -- Usage whitelisting
+            if not WhitelistedJobsUsage(PlayerPedId()) then
+                -- print("Job now allowed to use autodrive")
+                Subtitle("Autodrive ~r~Not Allowed", 3000)
+                return
+            end
+            -- is allowed to use
+            if not IsAllowedToUse then
+                print("Not Allowed to use", EventsTable.Destination.name)
+                Subtitle("Autodrive ~r~Not Allowed", 3000)
+
+                return
+            end
+            -- part requirements
+            if Config.RequirePartUpgrades then
+                -- destinations part requirement
+                if not IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_destinations) then
+                    -- print("ad_dest not installed", IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_destinations))
+                    Subtitle("Autodrive Destinations ~r~Not Installed", 3000)
+                    -- return
+                else
+                    ThirdItem(mainMenu)
+                end
+                -- styles part requirement
+                if not IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_styles) then
+                    -- print("ad_dest not installed", IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_styles))
+                    Subtitle("Autodrive Styles ~r~Not Installed", 3000)
+                    -- return
+                else
+                    SecondItem(mainMenu)
+                end
+                -- speed part requirement
+                if not IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_styles) then
+                    -- print("ad_dest not installed", IsPartInstalled(GetVehiclePedIsIn(PlayerPedId(), false), ADItems.ad_styles))
+                    Subtitle("Autodrive Speed ~r~Not Installed", 3000)
+                    -- return
+                else
+                    speedLimiter(mainMenu)
+                end
+            else
+                FirstItem(mainMenu)
+                SecondItem(mainMenu)
+                ThirdItem(mainMenu)
+                speedLimiter(mainMenu)
+                OSDToggleSettings(mainMenu)
+                OSDToggle(mainMenu)
+                -- _menuPool:RefreshIndex()
+                -- mainMenu:Visible(not mainMenu:Visible())
+            end
+        else
+            FirstItem(mainMenu)
+            SecondItem(mainMenu)
+            ThirdItem(mainMenu)
+            speedLimiter(mainMenu)
+            OSDToggleSettings(mainMenu)
+            OSDToggle(mainMenu)
+        end
+        _menuPool:RefreshIndex()
+        mainMenu:Visible(not mainMenu:Visible())
+    end
+    -- print("^6############################################################################ NativeUI Menu allowed")
+    -- FirstItem(mainMenu)
+    -- SecondItem(mainMenu)
+    -- ThirdItem(mainMenu)
+    -- speedLimiter(mainMenu)
+    -- OSDToggleSettings(mainMenu)
+    -- OSDToggle(mainMenu)
+    -- _menuPool:RefreshIndex()
+    -- mainMenu:Visible(not mainMenu:Visible())
+end)
 -- activate/display NativeUI menu
 if ADDefaults.UseNativeUI then
     Citizen.CreateThread(function()
@@ -334,7 +428,9 @@ if ADDefaults.UseNativeUI then
             _menuPool:ProcessMenus()
             --[[ The "e" button will activate the menu ]]
             if IsControlPressed(1, 21) and IsControlJustPressed(1, 214) then -- left shift 21 and ] 40
-                mainMenu:Visible(not mainMenu:Visible())
+                TriggerEvent('ta-autodrive:nativeui')
+
+                -- mainMenu:Visible(not mainMenu:Visible())
             end
         end
     end)

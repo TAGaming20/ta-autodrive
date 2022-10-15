@@ -7,10 +7,13 @@
 if not ADDefaults.UseQBCore then return end
 
 local QBCore = exports['qb-core']:GetCoreObject()
+
+local TADev = exports['ta-dev']:GetTADevObject()
 RegisterNetEvent('QBCore:Client:UpdateObject', function()
 	QBCore = exports['qb-core']:GetCoreObject()
 end)
 
+-- TADev.Debug(QBCore.Shared.Items['ad_fob'])
 -- -- ############################################################################################# Metatable
 
 -- Create metatable
@@ -28,6 +31,12 @@ end
 AutodriveMeta.mt.__index = AutodriveMeta.protoype -- ### did work
 exports('vehicleswithautodrive', function()
     return VehiclesWithAutodrive
+end)
+
+RegisterNetEvent('QBCore:Server:UpdateObject', function()
+	if source ~= '' then return false end
+	QBCore = exports['qb-core']:GetCoreObject()
+    
 end)
 
 -- -- ############################################################################################# FUNCTIONS
@@ -71,30 +80,17 @@ end
 
 -- -- #############################################################################################
 
--- get closest vehicle to ped
----@param ped integer player ped
----@return integer vehicle vehicle id
-local function GetVehicle(ped)
-    local pLoc = GetEntityCoords(ped)
-    local vehicle = nil
-    if IsAnyVehicleNearPoint(pLoc.x, pLoc.y, pLoc.z, 5.0) then
-        if IsPedInAnyVehicle(ped, false) then
-            vehicle = GetVehiclePedIsIn(ped, false)
-        else
-            vehicle = GetClosestVehicle(pLoc.x, pLoc.y, pLoc.z, 5.0, 0, 71)
-        end
-    end
-    return vehicle
-end
-
--- -- #############################################################################################
-
 -- is ad_kit installed, used in InstallPartsByVehicle
 ---@param vehicle integer vehicle id
 ---@param ad_part string autodrive part
 ---@return boolean bool is part installed
-local function IsADPartInstalled(vehicle, ad_part)
+function IsADPartInstalled(vehicle, ad_part)
+    print("adclient-qb: IsADPartInstalled", vehicle, ad_part)
     local ret = false
+    if not Config.RequireParts then
+        ret = true print(ret)
+        return ret
+    end
     if VehiclesWithAutodrive[vehicle] == nil then return ret end
     if VehiclesWithAutodrive[vehicle][ad_part] == true then
         ret = true
@@ -177,89 +173,11 @@ local function InstallProgressBar(vehicle, ad_part)
     -- Wait(1000)
 end
 
--- -- ############################################################################################# is allowed
-
--- is vehicle whitelisted
----@param vehicle integer vehicle id
----@return boolean retval is vehicle whitelisted
-local function whitelistedVehicle(vehicle)
-    local retval = false
-    if Config.Whitelist.Vehicles['all'] == true then retval = true --[[print("Whitelisted Vehicle", retval)]] return retval end
-    for k, v in pairs(Config.Whitelist.Vehicles) do
-        if GetEntityModel(vehicle) == GetHashKey(k) then
-            retval = v
-            -- print("Whitelisted Vehicle", retval)
-            return retval
-        end
-    end
-    -- print("Whitelisted Vehicle", retval)
-    return retval
-end
-
--- -- #############################################################################################
-
--- is vehicle blacklisted
----@param vehicle integer vehicle id
----@return boolean retval is vehicle blacklisted
-local function blacklistedVehicle(vehicle)
-    local retval = false
-    if Config.Blacklist.Vehicles['none'] == true then
-        retval = false
-        -- print("Blacklisted Vehicle", retval)
-        return retval
-    end
-    for k, v in pairs(Config.Blacklist.Vehicles) do
-        if GetEntityModel(vehicle) == GetHashKey(k) then
-            retval = v
-            -- print("Blacklisted Vehicle", retval)
-            return retval
-        end
-    end
-    -- print("Blacklisted Vehicle", retval)
-    return retval
-end
-
--- -- #############################################################################################
-
--- is job whitelsited
----@param ped integer player id
----@return boolean retval is job whitelisted
-local function whitelistedJobs(ped)
-    local PlayerData = QBCore.Functions.GetPlayerData()
-    local job = PlayerData.job.name
-    local retval = false
-    if Config.Whitelist.Jobs['all'] == true then retval = true print("Whitelisted Job", retval) return retval end
-    for k, v in pairs(Config.Whitelist.Jobs) do
-        if job == k then
-            retval = v
-            -- print("Whitelisted Job", retval)
-            return retval
-        end
-    end
-    -- print("Whitelisted Job", retval)
-    return retval
-end
-
--- -- #############################################################################################
-
--- are autodrive functions allowed
----@param ped integer player id
----@param vehicle integer vehicle id
----@return boolean retval are autodrive functions allowed
-local function IsAllowed(ped, vehicle)
-    local retval = false
-    if not whitelistedJobs(ped) then NotifyAutodrive('notjob', 'error') return retval end
-    if blacklistedVehicle(vehicle) then NotifyAutodrive('notvehicle', 'error') return retval end
-    if not whitelistedVehicle(vehicle) then NotifyAutodrive('notvehicle', 'error') return retval end
-    retval = true
-    return retval
-end
-
--- --############################################################################################# Main
+-- --############################################################################################# Install Part Function
 -- --############################################################################################# 
 
 ---@param ad_part string located in items.lua
-local function Main(ad_part)
+local function InstallPart(ad_part)
     local has_key            = false
     local playerPed          = PlayerPedId()
     local veh                = nil
@@ -281,7 +199,7 @@ local function Main(ad_part)
     else print("does not exist") return
     end
 
-    if not IsAllowed(playerPed, vehicle) then return end
+    if not IsAllowedToInstall(playerPed, vehicle) then return end
     if VehiclesWithAutodrive[vehicle] == nil then NotifyAutodrive('tryagain', 'error') return end
     if has_key then
         
@@ -324,385 +242,6 @@ end
 -- -- ######################################################################################################
 
 -- Autodrive Main Menu
-
--- -- ######################################################################################################-- QB Main Menu Event
--- -- ######################################################################################################
-
-RegisterNetEvent(EventsTable.QBMenu.main)
-AddEventHandler(EventsTable.QBMenu.main, function()
-    local veh = GetVehicle(PlayerPedId())
-    local hasItem = QBCore.Functions.HasItem('ad_fob')
-    if not IsADPartInstalled(veh, "ad_kit") or not hasItem then
-        NotifyAutodrive('adkitfail', "error")
-        return
-    end
-    local submenu = EventsTable.QBMenu.submenu
-    if ADDefaults.UseQBMenu then
-        exports['qb-menu']:openMenu({
-            { -- header = "Autodrive Menu"
-                header = "Autodrive Menu",
-                txt = "Sit back and close your eyes..",
-                isMenuHeader = true
-            },
-            { -- Toggle autodrive
-                header = "Autodrive",
-                txt = "Toggle autodrive on/off",
-                params = {
-                    item = 'ad_fob',
-                    event = EventsTable.Start,
-                    -- args = false,
-                }
-            },
-            { -- Toggle driving style
-                header = "Driving Styles",
-                txt = "Don't get too crazy",
-                params = {
-                    event = submenu,
-                    args = 'styles'
-                }
-            },
-            { -- Toggle Destinations
-                header = "Destinations",
-                txt = "Where do you want to go?",
-                params = {
-                    event = submenu,
-                    args = 'destinations'
-                }
-            },
-            { -- Toggle Speed Limits
-                header = "Set Speed",
-                txt = "Take it easy.. ",
-                params = {
-                    event = submenu,
-                    args = 'speeds'
-                }
-            },
-            { -- Toggle Settings
-                header = "Settings",
-                txt = "Fine Tuning",
-                params = {
-                    event = submenu,
-                    args = 'settings'
-                }
-            },
-            { -- Toggle OSD
-                header = "OSD",
-                txt = "Heads up!",
-                params = {
-                    event = EventsTable.Settings,
-                    args = SettingsTable.OSD
-                }
-            },
-            { -- Follow
-                header = "Tag Vehicle",
-                params = {
-                    event = EventsTable.Destination,
-                    args = DestTable.Tag.id
-                }
-            },
-            { -- close
-                header = "<< Close Menu",
-                txt = "Bye!",
-                params = {
-                    event = EventsTable.QBMenu.close,
-                }
-
-            },
-        })
-    end
-end)
-
--- ######################################################################################################-- QB Sub Menu Events
-
-RegisterNetEvent(EventsTable.QBMenu.submenu, function(submenu)    
-    -- ##############################################################################-- Destination QB Menu
-    if submenu == "destinations" then
-        local event = EventsTable.Destination
-        exports['qb-menu']:openMenu({
-            { -- header = "Destinations"
-                header = "Destinations",
-                txt = "Where do you want to go?",
-                isMenuHeader = true
-            },
-            { -- Freeroam
-                header = "Free Roam",
-                params = {
-                    event = event,
-                    args = 'freeroam'
-                }
-            },
-            { -- Waypoint
-                header = "Waypoint",
-                params = {
-                    event = event,
-                    args = 'waypoint'
-                }
-            },
-            { -- Blip
-                header = "Blip",
-                params = {
-                    event = EventsTable.QBMenu.submenu,
-                    args = 'blips'
-                }
-            },
-            { -- Fuel
-                header = "Fuel",
-                params = {
-                    event = event,
-                    args = 'fuel'
-                }
-            },
-            { -- Follow
-                header = "Follow Vehicle",
-                params = {
-                    event = event,
-                    args = 'follow'
-                }
-            },
-            { -- back
-                header = "<< Back",
-                params = {
-                    event = EventsTable.QBMenu.main,
-                }
-            },
-
-        })
-    end
-
-    -- ##############################################################################-- Styles QB Menu
-
-    if submenu == "styles" then
-        local event = EventsTable.Style
-        exports['qb-menu']:openMenu({
-            { -- Driving Styles
-                header = "Driving Styles",
-                txt = "Don't get too crazy",
-                isMenuHeader = true
-            },
-            { -- Safe
-                header = StylesTable.Safe.title,
-                params = {
-                    event = event,
-                    args = StylesTable.Safe.id
-                }
-            },
-            { -- Aggressive
-                header = StylesTable.Aggressive.title,
-                params = {
-                    event = event,
-                    args = StylesTable.Aggressive.id
-                }
-            },
-            { -- Code1
-                header = StylesTable.Code1.title,
-                params = {
-                    event = event,
-                    args = StylesTable.Code1.id
-                }
-            },
-            { -- Code3
-                header = StylesTable.Code3.title,
-                params = {
-                    event = event,
-                    args = StylesTable.Code3.id
-                }
-            },
-            { -- Wreckless
-                header = StylesTable.Wreckless.title,
-                params = {
-                    event = event,
-                    args = StylesTable.Wreckless.id
-                }
-            },
-            { -- Chase
-                header = StylesTable.Chase.title,
-                params = {
-                    event = event,
-                    args = StylesTable.Chase.id
-                }
-            },
-            { -- back
-                header = "<< Back",
-                params = {
-                    event = EventsTable.QBMenu.main,
-                }
-            },
-        })
-
-    end
-
-    -- ##############################################################################-- Speeds QB Menu
-
-    if submenu == "speeds" then
-        local event = 'ta-autodrive:client:speed'
-        exports['qb-menu']:openMenu({
-            { -- Driving Styles
-                header = "Set Speeds",
-                txt = "Take it easy.. ",
-                isMenuHeader = true
-            },
-            { -- Posted Limits
-                header = SpeedTable.Speed.PostedLimits.title,
-                params = {
-                    event = event,
-                    args = SpeedTable.Speed.PostedLimits.id
-                }
-            },
-            { -- Manual Input
-                header = SpeedTable.Speed.SetSpeed.title,
-                params = {
-                    event = event,
-                    args = SpeedTable.Speed.SetSpeed.id
-                }
-            },
-            { -- Reset Speed
-                header = SpeedTable.Speed.ResetSpeed.title,
-                params = {
-                    event = event,
-                    args = SpeedTable.Speed.ResetSpeed.id
-                }
-            },
-            { -- back
-                header = "<< Back",
-                params = {
-                    event = EventsTable.QBMenu.main,
-                }
-            },
-        })
-
-    end
-
-    -- ##############################################################################-- Blips QB Menu
-
-    if submenu == 'blips' then
-        local veh = GetVehicle(PlayerPedId())
-        if not IsADPartInstalled(veh, "ad_kit") then
-            NotifyAutodrive('adkitfail', "error")
-            --return
-        end
-        local qbMenu = exports['qb-menu']:openMenu()
-        local event = EventsTable.Destination
-        exports['qb-menu']:openMenu({
-            { -- header = "Autodrive Menu"
-                header = "Blips Menu",
-                txt = "Pick a BLIP any BLIP",
-                isMenuHeader = true
-            },
-            { -- Police blip
-                header = BlipDestination.BlipNames.Police.title,
-                params = {
-                    event = event,
-                    args = tonumber(BlipDestination.BlipNames.Police.sprite),
-                }
-            },
-            { -- Hospital Blip
-                header = BlipDestination.BlipNames.Hospital.title,
-                params = {
-                    event = event,
-                    args = tonumber(BlipDestination.BlipNames.Hospital.sprite),
-                }
-            },
-            { -- Fuel Blip
-                header = BlipDestination.BlipNames.Fuel.title,
-                params = {
-                    event = event,
-                    args = tonumber(BlipDestination.BlipNames.Fuel.sprite),
-                }
-            },
-            -- { -- Repair Blip
-            --     header = BlipDestination.BlipNames.Repair.title,
-            --     params = {
-            --         event = event,
-            --         args = BlipDestination.BlipNames.Repair.sprite,
-            --     }
-            -- },
-            { -- Bennys Blip
-                header = BlipDestination.BlipNames.Bennys.title,
-                params = {
-                    event = event,
-                    args = tonumber(BlipDestination.BlipNames.Bennys.sprite),
-                }
-            },
-            { -- Ammunation Blip
-                header = BlipDestination.BlipNames.Ammunation.title,
-                params = {
-                    event = event,
-                    args = tonumber(BlipDestination.BlipNames.Ammunation.sprite),
-                }
-            },
-            { -- Weed Blip
-                header = BlipDestination.BlipNames.Weed.title,
-                params = {
-                    event = event,
-                    args = tonumber(BlipDestination.BlipNames.Weed.sprite),
-                }
-            },
-            { -- back
-                header = "<< Back",
-                params = {
-                    event = EventsTable.QBMenu.submenu,
-                    args = 'destinations'
-                }
-            },
-        })
-    end
-
-    -- ##############################################################################-- Settings QB Menu
-
-    if submenu == 'settings' then
-        local event = EventsTable.Settings
-        exports['qb-menu']:openMenu({
-            { -- Driving Styles
-                header = "Settings",
-                txt = "Fine Tuning",
-                isMenuHeader = true
-            },
-            { -- OSD Always on/off
-                header = "OSD Always on/off",
-                params = {
-                    event = event,
-                    args = 'osd'
-                }
-            },
-            { -- Timed OSD
-                header = "Timed OSD",
-                params = {
-                    event = event,
-                    args = 'timedosd'
-                }
-            },
-            { -- Toggle Speed Units
-                header = "Toggle MPH/KMH",
-                params = {
-                    event = event,
-                    args = 'setspeedunits'
-                }
-            },
-            { -- back
-                header = "<< Back",
-                params = {
-                    event = EventsTable.QBMenu.main,
-                }
-            },
-        })
-    end
-end)
-
--- ######################################################################################################-- QB Close Menu Event
-
-RegisterNetEvent(EventsTable.QBMenu.close, function() exports['qb-menu']:closeMenu()
-end)
-
--- -- ######################################################################################################-- QB-Target
--- -- ######################################################################################################
-
--- qb target
-
-local vehBones = {
-    'boot',
-    'bonnet'
-}
-
 local requiredParts = {}
 if Config.RequireParts then
     requiredParts = {
@@ -724,11 +263,406 @@ else
         addestinations = false,
     }
 end
-
--- -- ######################################################################################################-- QB Target Menu
+-- -- ######################################################################################################-- QB Main Menu Event
 -- -- ######################################################################################################
 
--- Install autodrive parts
+RegisterNetEvent(EventsTable.QBMenu.main)
+AddEventHandler(EventsTable.QBMenu.main, function()
+    local veh = GetVehicle(PlayerPedId())
+    local hasItem = QBCore.Functions.HasItem('ad_fob')
+    if not IsADPartInstalled(veh, "ad_kit") or not hasItem then
+        NotifyAutodrive('adkitfail', "error")
+        return
+    end
+    local submenu = EventsTable.QBMenu.Submenu.name
+    if ADDefaults.UseQBMenu then
+        exports['qb-menu']:openMenu({
+            { -- header = "Autodrive Menu"
+                header = "Autodrive Menu",
+                txt = "Sit back and close your eyes..",
+                isMenuHeader = true
+            },
+            { -- Toggle autodrive
+                header = "Autodrive",
+                txt = DestTable.Toggle.Start.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Toggle.Start.icon),
+                params = {
+                    item = requiredParts.adkit,
+                    event = EventsTable.Start,
+                    -- args = false,
+                }
+            },
+            { -- Toggle driving style
+                header = StylesTable.Info.title,
+                txt = StylesTable.Info.txt,
+                icon = string.format('fa-solid fa-%s', StylesTable.Info.icon),
+                params = {
+                    event = submenu,
+                    args = 'styles'
+                }
+            },
+            { -- Toggle Destinations
+                header = DestTable.Info.title,
+                txt = DestTable.Info.txt,
+                icon = string.format('fa-solid fa-%s', DestTable.Info.icon),
+                params = {
+                    event = submenu,
+                    args = 'destinations'
+                }
+            },
+            { -- Toggle Speed Limits
+                header = SpeedTable.Info.title,
+                txt = SpeedTable.Info.txt,
+                icon = string.format('fa-solid fa-%s', SpeedTable.Info.icon),
+                params = {
+                    event = submenu,
+                    args = 'speeds'
+                }
+            },
+            { -- Toggle Settings
+                header = SettingsTable.Info.title,
+                txt = SettingsTable.Info.txt,
+                icon = string.format('fa-solid fa-%s', SettingsTable.Info.icon),
+                params = {
+                    event = submenu,
+                    args = 'settings'
+                }
+            },
+            { -- Toggle OSD
+                header = SettingsTable.Args.OSD.title,
+                txt = SettingsTable.Args.OSD.txt,
+                icon = string.format('fa-solid fa-%s', SettingsTable.Info.icon),
+                params = {
+                    event = EventsTable.Settings.name,
+                    args = SettingsTable.Args.OSD.id
+                }
+            },
+            { -- Follow
+                header = DestTable.Args.Tag.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Tag.icon),
+                params = {
+                    event = EventsTable.Destination.name,
+                    args = DestTable.Args.Tag.id
+                }
+            },
+            { -- close
+                header = "<< Close Menu",
+                txt = "Bye!",
+                params = {
+                    event = EventsTable.QBMenu.close,
+                }
+
+            },
+        })
+    end
+end)
+
+-- ######################################################################################################-- QB Sub Menu Events
+
+RegisterNetEvent(EventsTable.QBMenu.Submenu.name, function(submenu)    
+    -- ##############################################################################-- Destination QB Menu
+    if submenu == "destinations" then
+        local event = EventsTable.Destination.name
+        exports['qb-menu']:openMenu({
+            { -- header = "Destinations"
+                header = "Destinations",
+                txt = "Where do you want to go?",
+                isMenuHeader = true
+            },
+            { -- Freeroam
+                header = DestTable.Args.Freeroam.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Freeroam.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Freeroam.id
+                }
+            },
+            { -- Blip
+                header = DestTable.Args.Blip.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Blip.icon),
+                params = {
+                    event = EventsTable.QBMenu.Submenu.name,
+                    args = 'blips'
+                }
+            },
+            { -- Waypoint
+                header = DestTable.Args.Waypoint.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Waypoint.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Waypoint.id
+                }
+            },
+            { -- Fuel
+                header = DestTable.Args.Fuel.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Fuel.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Fuel.id
+                }
+            },
+            { -- Postal
+                header = DestTable.Args.Postal.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Postal.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Postal.id
+                }
+            },
+            { -- Follow
+                header = DestTable.Args.Follow.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Follow.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Follow.id
+                }
+            },
+            { -- Tag
+                header = DestTable.Args.Tag.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Tag.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Tag.id
+                }
+            },
+            { -- back
+                header = "<< Back",
+                params = {
+                    event = EventsTable.QBMenu.main,
+                }
+            },
+
+        })
+    end
+
+    -- ##############################################################################-- Styles QB Menu
+
+    if submenu == "styles" then
+        local event = EventsTable.Style.name
+        local staffList = {}
+
+        staffList[#staffList + 1] = { -- create non-clickable header button
+            isMenuHeader = true,
+            header       = StylesTable.Info.title,
+            txt          = StylesTable.Info.title,
+            icon         = string.format('fa-solid fa-%s', StylesTable.Info.icon),
+        }
+        for k, v in pairs(StylesTable.Args) do -- loop through our table
+            if v ~= StylesTable.info then
+                staffList[#staffList + 1] = { -- insert data from our loop into the menu
+                    header = v.title,
+                    icon = string.format('fa-solid fa-%s', v.icon), --fa-face-grin-tears
+                    params = {
+                        event = event, -- event name
+                        args = v
+                        -- {
+                        --     -- name = k, -- value we want to pass
+                        --     -- label = tonumber(v.sprite)
+                        -- }
+                    }
+                }
+            end
+        end
+
+        staffList[#staffList + 1] = { -- create clickable header button
+            header = '<< Back',
+            -- icon = 'fa-solid fa-infinity',
+            params = {
+                event = EventsTable.QBMenu.main,
+                -- args = 'destinations'
+            }
+        }
+        table.sort(StylesTable.Args, function (a, b)
+            return string.upper(a.id) < string.upper(b.id)
+        end)
+        exports['qb-menu']:openMenu(staffList) -- open our menu
+
+    end
+
+    -- ##############################################################################-- Speeds QB Menu
+
+    if submenu == "speeds" then
+        local event = 'ta-autodrive:client:speed'
+        exports['qb-menu']:openMenu({
+            { -- Driving Styles
+                isMenuHeader = true,
+                header = SpeedTable.Info.title,
+                txt = SpeedTable.Info.txt,
+                icon = string.format('fa-solid fa-%s', SpeedTable.Info.icon),
+            },
+            { -- Posted Limits
+                header = SpeedTable.Args.PostedLimits.title,
+                icon = string.format('fa-solid fa-%s', SpeedTable.Args.PostedLimits.icon),
+                params = {
+                    event = event,
+                    args = SpeedTable.Args.PostedLimits.id
+                }
+            },
+            { -- Manual Input
+                header = SpeedTable.Args.SetSpeed.title,
+                icon = string.format('fa-solid fa-%s', SpeedTable.Args.SetSpeed.icon),
+                params = {
+                    event = event,
+                    args = SpeedTable.Args.SetSpeed.id
+                }
+            },
+            { -- Reset Speed
+                header = SpeedTable.Args.ResetSpeed.title,
+                icon = string.format('fa-solid fa-%s', SpeedTable.Args.ResetSpeed.icon),
+                params = {
+                    event = event,
+                    args = SpeedTable.Args.ResetSpeed.id
+                }
+            },
+            { -- back
+                header = "<< Back",
+                params = {
+                    event = EventsTable.QBMenu.main,
+                }
+            },
+        })
+
+    end
+
+    -- ##############################################################################-- Blips QB Menu
+
+    if submenu == 'blips' then
+        local veh = GetVehicle(PlayerPedId())
+        if not IsADPartInstalled(veh, "ad_kit") then
+            NotifyAutodrive('adkitfail', "error")
+            --return
+        end
+        
+        local event = EventsTable.Destination.name
+        local staffList = {}
+
+        staffList[#staffList + 1] = { -- create non-clickable header button
+            isMenuHeader = true,
+            header = "Blips Menu",
+            txt = DestTable.Args.Blip.txt,
+            icon = 'fa-solid fa-infinity'
+        }
+
+        for k,v in pairs(BlipDestination.BlipNames) do -- loop through our table
+            print("k", k, "v", v.sprite, v.id, v.title)
+            staffList[#staffList + 1] = { -- insert data from our loop into the menu
+                header = v.title, --k,
+                txt = v.title,
+                icon = string.format('fa-solid fa-%s', v.icon), --fa-face-grin-tears
+                params = {
+                    event = event, -- event name
+                    args = tonumber(v.sprite)
+                    -- {
+                    --     -- name = k, -- value we want to pass
+                    --     -- label = tonumber(v.sprite)
+                    -- }
+                }
+            }
+        end
+
+        staffList[#staffList + 1] = { -- create clickable header button
+            header = 'Close Menu',
+            icon = 'fa-solid fa-infinity',
+            params = {
+                event = EventsTable.QBMenu.Submenu.name,
+                args = 'destinations'
+            }
+        }
+
+        exports['qb-menu']:openMenu(staffList) -- open our menu
+    end
+
+    -- ##############################################################################-- Settings QB Menu
+
+    if submenu == 'settings' then
+        local event = EventsTable.Settings.name
+        exports['qb-menu']:openMenu({
+            { -- Settings
+                isMenuHeader = true,
+                header = SettingsTable.Info.title,
+                txt = SettingsTable.Info.txt,
+                icon = string.format('fa-solid fa-%s', SettingsTable.Info.icon),
+            },
+            { -- OSD Always on/off
+                header = SettingsTable.Args.ToggleOsd.title,
+                txt = tostring(ADDefaults.OnScreenDisplay):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.ToggleOsd.icon),
+                params = {
+                    event = event,
+                    args = SettingsTable.Args.ToggleOsd.id
+                }
+            },
+            { -- Timed OSD
+                header = SettingsTable.Args.TimedOsd.title,
+                txt = tostring(ADDefaults.OSDtimed):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.TimedOsd.icon),
+                params = {
+                    event = event,
+                    args = SettingsTable.Args.TimedOsd.id
+                }
+            },
+            { -- Toggle Speed Units
+                header = SettingsTable.Args.SetSpeedUnits.title,
+                txt = tostring(toggleSpeedUnits):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.SetSpeedUnits.icon),
+                params = {
+                    event = event,
+                    args = SettingsTable.Args.SetSpeedUnits.id
+                }
+            },
+            { -- Toggle Driver Visible
+                header = SettingsTable.Args.DriverVisible.title,
+                txt = tostring(toggleDriverVisible):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.DriverVisible.icon),
+                params = {
+                    event = event,
+                    args = SettingsTable.Args.DriverVisible.id
+                }
+            },
+            { -- Toggle Driver Create
+                header = SettingsTable.Args.DriverCreate.title,
+                txt = tostring(toggleDriverCreation):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.DriverCreate.icon),
+                params = {
+                    event = event,
+                    args = SettingsTable.Args.DriverCreate.id,
+                }
+            },
+            { -- Toggle Driver Forced
+                header = SettingsTable.Args.DriverForced.title,
+                txt = tostring(toggleDriverForced):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.DriverForced.icon),
+                params = {
+                    event = event,
+                    args = SettingsTable.Args.DriverForced.id,
+                }
+            },
+            { -- back
+                header = "<< Back",
+                params = {
+                    event = EventsTable.QBMenu.main,
+                }
+            },
+        })
+    end
+end)
+
+-- ######################################################################################################-- QB Close Menu Event
+
+RegisterNetEvent(EventsTable.QBMenu.close, function() exports['qb-menu']:closeMenu()
+end)
+
+-- -- ######################################################################################################-- QB-Target
+-- -- ######################################################################################################
+
+-- QB-Target Bones
+
+local vehBones = {
+    'boot',
+    'bonnet'
+}
+
+-- QB-Target menu
 exports['qb-target']:AddTargetBone(vehBones, {
     options = {
         {  -- Install ad_kit
@@ -794,16 +728,16 @@ exports['qb-target']:AddTargetBone(vehBones, {
                 TriggerEvent("ta-autodrive:client:qb:install:part", 'ad_osd')
             end
         },
-        { -- install ad_blips
-        num = 7,
-        type = "client",
-        icon  = "fas fa-bolt",
-        label = "Install Autodrive Blips",
-        item  = requiredParts.addestinations,
-        action = function()
-            TriggerEvent("ta-autodrive:client:qb:install:part", 'ad_kit')
-        end
-        },
+        --[[ { -- install ad_blips
+        -- num = 7,
+        -- type = "client",
+        -- icon  = "fas fa-bolt",
+        -- label = "Install Autodrive Blips",
+        -- item  = requiredParts.addestinations,
+        -- action = function()
+        --     TriggerEvent("ta-autodrive:client:qb:install:part", 'ad_kit')
+        -- end
+        -- },]]
     },
     distance = 2.0,
 })
@@ -813,6 +747,14 @@ exports['qb-target']:AddTargetBone(vehBones, {
 
 RegisterNetEvent('ta-autodrive:client:qb:install:part')
 AddEventHandler('ta-autodrive:client:qb:install:part', function(ad_part)
-    local part = tostring(ad_part)
-    Main(part)
+    InstallPart(tostring(ad_part))
 end)
+
+RegisterCommand('adpart', function(source, args, rawcommand)
+    TriggerEvent('ta-autodrive:client:qb:install:part', args[1])
+    TaskEnterVehicle(PlayerPedId(), GetVehicle(PlayerPedId()), -1, -1, 2.0, 8, 0)
+end)
+
+
+
+

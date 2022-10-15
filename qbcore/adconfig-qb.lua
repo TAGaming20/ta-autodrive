@@ -5,24 +5,48 @@
 -----------------------------------------------------------------------------------------------------------------------------------------
 if not ADDefaults.UseQBCore then return end
 
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Default Settings -----------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
 Config = {}
-Config.KitInstallTime = 3000
-Config.UpgradeInstallTime = 1500
-Config.RequireParts = true
-Config.UseTarget = GetConvar('UseTarget', 'false') == 'true'
-Config.RequireJobInstall  = true
-Config.QBNotify = true
 
--- Blacklist certain vehicles. Use names or hashes. https://wiki.gtanet.work/index.php?title=Vehicle_Models
-Config.Blacklist          = {}
-Config.Blacklist.Vehicles = {['none'] = true, ['police'] = false, }
+Config.QBNotify            = true
+-- -- ##########################################-------------------------------------- AUTODRIVE INSTALLATION CONFIG
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Part Installation Settings -------------------------------------
+------------------------------------------------------------------------------------------------------------------
 
-Config.Whitelist          = {}
-Config.Whitelist.Jobs     = {['all'] = true, ['mechanic'] = true, ['police'] = true, ['ambulance'] = true, ['unemployed'] = false, }
-Config.Whitelist.Levels   = {['all'] = true, }
-Config.Whitelist.Upgrade  = {['all'] = true, }
-Config.Whitelist.Vehicles = {['all'] = true, ['police']= true, ['police2']= true, ['police3']= true, ['police4']= true, ['ambulance']= true, }
-Config.RestrictUpgrades   = {['none'] = true, }
+Config.KitInstallTime      = 3000
+Config.UpgradeInstallTime  = 1500
+Config.RequireParts        = false
+Config.RequirePartUpgrades = false
+Config.UseQBTarget         = GetConvar('UseTarget', 'false') == 'true'
+Config.RequireJobInstall   = true
+
+-- -- ##########################################-------------------------------------- AUTODRIVE USAGE CONFIG
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Permission Settings --------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+-- Blacklist certain vehicles. Use names or hashes
+-- https://wiki.gtanet.work/index.php?title=Vehicle_Models
+
+Config.Blacklist              = {}
+Config.Blacklist.Vehicles     = {['none'] = true, ['police'] = false, }
+
+Config.Whitelist              = {}
+Config.Whitelist.Jobs         = {['all'] = false, ['mechanic'] = true, ['police'] = true, ['ambulance'] = true, ['unemployed'] = false, }
+Config.Whitelist.Jobs.Install = {['all'] = false, ['mechanic'] = true, ['police'] = true, ['ambulance'] = true, ['unemployed'] = false, }
+Config.Whitelist.Jobs.Usage   = {['all'] = false, ['mechanic'] = true, ['police'] = true, ['ambulance'] = true, ['unemployed'] = false, }
+Config.Whitelist.Levels       = {['all'] = true, }
+Config.Whitelist.Upgrade      = {['all'] = true, }
+Config.Whitelist.Vehicles     = {['all'] = true, ['police']= true, ['police2']= true, ['police3']= true, ['police4']= true, ['ambulance']= true, }
+Config.RestrictUpgrades       = {['none'] = true, }
+
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Language Translations ------------------------------------------
+------------------------------------------------------------------------------------------------------------------
 
 Config.Lang = {}
 Config.Lang.Notify = {
@@ -50,7 +74,7 @@ Config.Lang.Subtitle = {
     ['adupgradef']         = 'Upgrade Install ~r~Failed!',
     ['missingparts']       = 'Missing Required ~y~Parts!',
     ['tryagain']           = 'Something went wrong. Try again',
-    ['partremoved']        = 'Part Removed',
+    ['partremoved']        = 'Successfully ~g~Installed!',
     ['notjob']             = 'Not right for the job',
     ['notvehicle']         = "Not the right vehicle" 
 }

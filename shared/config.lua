@@ -4,36 +4,49 @@
 -----------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
 
-
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Default Settings -----------------------------------------------
+------------------------------------------------------------------------------------------------------------------
 ADDefaults                          = {}
 
+ADDefaults.UseMPH                   = true
+ADDefaults.OnScreenDisplay          = true 		-- set this true to have OSD on all the time, may impact performance
+ADDefaults.OSDtimed                 = false 	-- set this true to have OSD toggle off after 3 seconds
+ADDefaults.Subtitles                = true
+ADDefaults.ToggleDriverCreation		= false 		-- ** experimental features **
+
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Integrations ---------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+ADDefaults.UseQBCore                = true
 ADDefaults.UseNativeUI              = true
 ADDefaults.UseRadialMenu            = true
 ADDefaults.UseQBMenu				= true
 ADDefaults.RegisterKeys             = true
-ADDefaults.EnableHotKeys            = false -- non registered hot keys not fully tested in this version
+ADDefaults.EnableHotKeys            = false 	-- non registered hot keys not fully tested in this version
 ADDefaults.EnableCommands  			= true
-
-ADDefaults.UseQBCore = true
-
+ADDefaults.UsePostals				= true 		-- must have nearest postal loaded
+ADDefaults.ForceDrivers             = false
+ADDefaults.VisibleDrivers           = false
+ADDefaults.CreateDrivers            = false
 ------------------------------------------------------------------------------------------------------------------
---------------------------------------- Autodrive Default Settings -----------------------------------------------
+--------------------------------------- Autodrive Advanced Settings ----------------------------------------------
 ------------------------------------------------------------------------------------------------------------------
 
 ADDefaults.DefaultDestination       = "Freeroam"
 ADDefaults.DefaultBlip       		= 60
 ADDefaults.DefaultDriveStyleName    = "Safe"
 ADDefaults.DefaultDriveSpeed        = 25.0
-ADDefaults.TagVehicleScanTime       = 3000 -- how long to scan for vehicles
-ADDefaults.UseMPH                   = true
+ADDefaults.TagVehicleScanTime       = 3000 		-- how long to scan for vehicles
 ADDefaults.MPH                      = 2.236936
 ADDefaults.KMH                      = 3.6
-ADDefaults.OnScreenDisplay          = true -- set this to true to have OSD on all the time
-ADDefaults.OSDtimed                 = false -- set this true to have OSD toggle off after 3 seconds
-ADDefaults.Subtitles                = true
+ADDefaults.OSDX                     = 0.69 		-- OnScreenDisplay x location, {min = 0.0 , max = 1.0}
+ADDefaults.OSDY                     = 0.75 		-- OnScreenDisplay y location, {min = 0.0 , max = 1.0}
 
-ADDefaults.OSDX                     = 0.69 -- OnScreenDisplay x location, {min = 0.0 , max = 1.0}
-ADDefaults.OSDY                     = 0.75 -- OnScreenDisplay y location, {min = 0.0 , max = 1.0}
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Commands -------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
 
 -- // Autodrive Commands
 -- // -- keymappings enabled won't delete after disabling
@@ -50,6 +63,10 @@ ADCommands.Follow                   = "adfollow"
 ADCommands.SpeedUp                  = "adspeedup"
 ADCommands.SpeedDown                = "adspeeddown"
 
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Hotkeys --------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
 -- Non registered hotkeys are not fully tested
 ADHotkeys                           = {} -- These are still a work in progress and may not function in this version
 ADHotkeys.Start                     = 110   -- numpad 5
@@ -58,6 +75,10 @@ ADHotkeys.Tag                       = 41    -- [
 ADHotkeys.Follow                    = 40    -- ]
 ADHotkeys.SpeedUp                   = 109   -- numpad 6
 ADHotkeys.SpeedDown                 = 108   -- numpad 4
+
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- Autodrive Tables ---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
 
 ADDefaults.GasStations = {
 	vector3(49.4187, 2778.793, 58.043),
@@ -91,4 +112,112 @@ ADDefaults.GasStations = {
 	vector3(-66.48, -2532.57, 6.14),
 }
 
+DriverList = {
+	'ig_benny',
+	-- 's_f_y_cop_01',
+
+}
+
+------------------------------------------------------------------------------------------------------------------
+--------------------------------------- QBCore Add Items ---------------------------------------------------------
+------------------------------------------------------------------------------------------------------------------
+
+exports['qb-core']:AddItems({
+    ["ad_fob"] = {
+        ["name"]        = "ad_fob",
+        ["label"]       = "Autodrive FOB",
+        ["weight"]      = 1,
+        ["type"]        = "item",
+        ["image"]       = "ad_fob.png",
+        ["unique"]      = true,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Bro, where's the remote!"
+    },
+    ["ad_tagger"] = {
+        ["name"]        = "ad_tagger",
+        ["label"]       = "Autodrive Tagger",
+        ["weight"]      = 50,
+        ["type"]        = "item",
+        ["image"]       = "ad_tagger.png",
+        ["unique"]      = false,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Follow that car!"
+    },
+    ["ad_kit"] = {
+        ["name"]        = "ad_kit",
+        ["label"]       = "Autodrive Kit",
+        ["weight"]      = 50,
+        ["type"]        = "item",
+        ["image"]       = "ad_kit.png",
+        ["unique"]      = false,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Take your hands off the wheel!"
+    },
+    ["ad_speed"] = {
+        ["name"]        = "ad_speed",
+        ["label"]       = "AD Speed Upgrade",
+        ["weight"]      = 50,
+        ["type"]        = "item",
+        ["image"]       = "ad_speed.png",
+        ["unique"]      = true,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Bro, where's the remote!"
+    },
+    ["ad_styles"] = {
+        ["name"]        = "ad_styles",
+        ["label"]       = "AD Styles Upgrade",
+        ["weight"]      = 50,
+        ["type"]        = "item",
+        ["image"]       = "ad_styles.png",
+        ["unique"]      = false,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Follow that car!"
+    },
+    ["ad_destinations"] = {
+        ["name"]        = "ad_destinations",
+        ["label"]       = "AD Desinations Upgrade",
+        ["weight"]      = 50,
+        ["type"]        = "item",
+        ["image"]       = "ad_destinations.png",
+        ["unique"]      = false,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Take your hands off the wheel!"
+    },
+    ["ad_darts"] = {
+        ["name"]        = "ad_darts",
+        ["label"]       = "AD Darts",
+        ["weight"]      = 1,
+        ["type"]        = "item",
+        ["image"]       = "ad_darts.png",
+        ["unique"]      = false,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Take your hands off the wheel!"
+    },
+    ["ad_osd"] = {
+        ["name"]        = "ad_osd",
+        ["label"]       = "AD OSD Upgrade",
+        ["weight"]      = 50,
+        ["type"]        = "item",
+        ["image"]       = "ad_darts.png",
+        ["unique"]      = false,
+        ["useable"]     = true,
+        ["shouldClose"] = true,
+        ["combinable"]  = nil,
+        ["description"] = "Take your hands off the wheel!"
+    },
+})
 

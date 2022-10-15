@@ -11,10 +11,10 @@ shared_scripts {
 	'shared/speedlimits.lua',
 	'shared/tables.lua',
 	'qbcore/adconfig-qb.lua',
-	
 }
 
 client_scripts {
+	'client/functions.lua',
 	'client/client.lua',
 	'client/commands.lua',
 	'client/events.lua',
@@ -23,7 +23,9 @@ client_scripts {
 	'client/autodriveradialmenu.lua',
 	'qbcore/locations.lua',
 	'qbcore/adclient-qb.lua',
-
+	-- 'client/startup.lua',
+	'client/client-dev.lua',
+	'qbcore/qb-debug.lua',
 }
 
 server_scripts {

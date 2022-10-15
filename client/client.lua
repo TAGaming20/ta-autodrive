@@ -2,39 +2,13 @@ local QBCore = nil
 if ADDefaults.UseQBCore then
     QBCore = exports['qb-core']:GetCoreObject()
 end
+local TADev = exports['ta-dev']:GetTADevObject()
 
 -----------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------- Set Client Defaults ---------
 -----------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
-
--- DisplayDestination      = ADDefaults.DefaultDestination
-DisplayStyleName = ADDefaults.DefaultDriveStyleName
-DisplaySpeed            = ADDefaults.DefaultDriveSpeed
-IsAutoDriveEnabled      = false
-DisplayDestination      = ADDefaults.DefaultDestination
-
-ChosenBlip              = ADDefaults.DefaultBlip
-ChosenDrivingStyleName  = ADDefaults.DefaultDriveStyleName
-ChosenDrivingStyle      = 0
-ChosenSpeed             = ADDefaults.DefaultDriveSpeed
-SpeedUnits              = ADDefaults.MPH
-
-GameBlip = ADDefaults.DefaultBlip
-GameDestination         = 'freeroam'
-GameSpeed               = ChosenSpeed / SpeedUnits
-PostedLimits            = false
-
-IsPlayerInVehicle       = nil
-
----@type integer blip id
-TaggedBlip         = nil
----@type integer vehicle id
-TargetVeh          = nil
----@type boolean is vehicle tagged
-IsVehicleTagged    = false
-PedInTaggedVehicle = nil
 
 Values = {
     ["Safe"]       = 411,
@@ -56,21 +30,6 @@ local speedString       = ""
 -----------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
 
----@param t table
-function get_key_for_value(t, value)
-    for k, v in pairs(t) do
-        if v == value then return k end
-    end
-    return nil
-end
----@params t table
-function get_value_for_key(t, key)
-    for k, v in pairs(t) do
-        if k == key then return v end
-    end
-    return nil
-end
-
 -- set mph or kmh
 ChosenDrivingStyle = get_value_for_key(Values, ChosenDrivingStyleName)
 if ADDefaults.UseMPH then
@@ -83,82 +42,24 @@ else
     speedString = "kmh"
 end
 
------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------------ Functions -------------------
------------------------------------------------------------------------------------------------------------------------------------------
------------------------------------------------------------------------------------------------------------------------------------------
-
--- #############################################################################################################################--
--- ##########################################-------------------------------------- Subtitle function
-
--- autodrive subtitles
-function Subtitle(message, timer)
-    if ADDefaults.Subtitles then
-        BeginTextCommandPrint("STRING")
-        AddTextComponentString(message)
-        EndTextCommandPrint(timer, true)
-    end
-end
--- ##########################################-------------------------------------- isAutodrive subtitle function
-
-function isAutodriveSubtitle()
-    local styleName = ChosenDrivingStyleName
-    local autodriveBool = "false"
-    if ADDefaults.Subtitles then
-        BeginTextCommandPrint("STRING")
-        if IsAutoDriveEnabled then
-            autodriveBool = DisplayDestination:gsub("^%l", string.upper)
-            AddTextComponentString(string.format("Autodrive ~y~%s~s~ ~y~%s~s~", autodriveBool, styleName))
-        else
-            autodriveBool = "Disabled"
-            AddTextComponentString("Autodrive ~y~" .. autodriveBool)
-        end
-        EndTextCommandPrint(3000, true)
-    end
-end
--- ##########################################-------------------------------------- Get User Input function
-function GetUserInput(windowTitle, defaultText, maxInputLength)
-    -- Create the window title string.
-    local resourceName = string.upper(GetCurrentResourceName())
-    local textEntry = resourceName .. "_WINDOW_TITLE"
-    if windowTitle == nil then
-        windowTitle = "Enter:"
-    end
-    AddTextEntry(textEntry, windowTitle)
-
-    -- Display the input box.
-    DisplayOnscreenKeyboard(1, textEntry, "", defaultText or "", "", "", "", maxInputLength or 30)
-    Citizen.Wait(0)
-    -- Wait for a result.
-    while true do
-        Citizen.Wait(0)
-        local keyboardStatus = UpdateOnscreenKeyboard();
-        if keyboardStatus == 3 then -- not displaying input field anymore somehow
-            return nil
-        elseif keyboardStatus == 2 then -- cancelled
-            return nil
-        elseif keyboardStatus == 1 then -- finished editing
-            return GetOnscreenKeyboardResult()
-        else
-            Citizen.Wait(0)
-        end
-    end
-end
 -- ##########################################-------------------------------------- Print Settings function
 function PrintSettings()
-    print(string.format( 'Destination ^3%s ^7| Style ^3%s ^7| Name ^3%s ^7| Speed ^3%s ^7| GameSpeed ^3%s ^7| GameDestination ^3%s',
-        DisplayDestination:gsub("^%l", string.upper), ChosenDrivingStyle, ChosenDrivingStyleName, ChosenSpeed, ChosenSpeed/SpeedUnits, GameDestination))
+    local toggle = false
+    if toggle then
+        print(string.format( 'Destination ^3%s ^7| Style ^3%s ^7| Name ^3%s ^7| Speed ^3%s ^7| GameSpeed ^3%s ^7| GameDestination ^3%s',
+            DisplayDestination:gsub("^%l", string.upper), ChosenDrivingStyle, ChosenDrivingStyleName,
+            ChosenSpeed, ChosenSpeed/SpeedUnits, GameDestination))
+    end
 end
 -- ##########################################-------------------------------------- Driving Style Events function
 ---@param dsName string driving style name
 function DrivingStyleEvents(dsName)
     local playerPed = PlayerPedId()
-
-    ChosenDrivingStyleName = tostring(dsName:gsub("^%l", string.upper))
+    local ped = nil
+    ped = SetDriverPed()
+    ChosenDrivingStyleName = dsName -- tostring(dsName:gsub("^%l", string.upper))
     ChosenDrivingStyle = get_value_for_key(Values, ChosenDrivingStyleName)
-
-    SetDriveTaskDrivingStyle(playerPed, ChosenDrivingStyle)
+    SetDriveTaskDrivingStyle(ped, ChosenDrivingStyle)
     Subtitle("Driving Style: ~y~" .. ChosenDrivingStyleName, 1000)
     TimedOSD()
     PrintSettings()
@@ -168,12 +69,13 @@ end
 ---@param dest string destination name
 function DestinationEvents(dest)
     local playerPed = PlayerPedId()
+    local ped = nil
+    ped = SetDriverPed()
     DisplayDestination = dest:gsub("^%l", string.upper)
-    SetDriverAbility(playerPed, 1.0)
+    SetDriverAbility(ped, 1.0)
     isAutodriveSubtitle()
     TimedOSD()
     PrintSettings()
-    -- print(string.format("^2DestinationEvents^7: DisplayDestination ^3%s    ^7| dest ^3%s    ^7| GameDestination ^3%s", DisplayDestination, dest, GameDestination))
 end
 -- ##########################################-------------------------------------- Remove target function
 function RemoveTarget()
@@ -202,7 +104,7 @@ function Raycast(ped)
     -- run raycast while wait == true
     while wait do
         Citizen.Wait(100)
-        Citizen.SetTimeout(3000, function()
+        Citizen.SetTimeout(ADDefaults.TagVehicleScanTime, function()
             if entityHit == nil then
                 Subtitle("No vehicle ~y~Tagged", 3000)
             end
@@ -221,7 +123,7 @@ function Raycast(ped)
     end
     -- wait = false
     if entityHit == nil then
-        print(entityHit)
+        -- print(entityHit)
         Subtitle("No vehicle ~y~Tagged", 3000)
     end
     runTagger = false
@@ -431,17 +333,18 @@ AddEventHandler('onResourceStop', function(resource)
     local playerPed = PlayerPedId()
     local playerVeh = GetVehiclePedIsIn(playerPed, false)
     if resource == GetCurrentResourceName() then
-        TriggerEvent("autodrive:client:stopautodrive")
+        TriggerEvent(EventsTable.Stop)
         IsAutoDriveEnabled = false
         PostedLimits = false
         SetBlipRoute(GetClosestBlipOfType(ChosenBlip), false)
+        if DoesEntityExist(DriverPed) and DriverPed ~= PlayerPedId() then DeleteEntity(DriverPed) end
         ClearPedTasks(playerPed)
         if ADDefaults.UseRadialMenu and MenuItemId ~=nil then -- remove from radial menu
             exports['qb-radialmenu']:RemoveOption(MenuItemId)
             exports['qb-radialmenu']:RemoveOption(MenuItemId1)
             MenuItemId = nil
         end
-        TriggerEvent('autodrive:client:qbmenu:closemenu')
+        TriggerEvent(EventsTable.QBMenu.close)
         isAutodriveSubtitle()
     end
 end)

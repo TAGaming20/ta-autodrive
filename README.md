@@ -55,6 +55,154 @@ If using QB then make sure ta-autodrive loads after [qb]
 ta-autodrive uses qb-core, qb-inventory, qb-menu, and qb-radialmenu
 
 
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+-- add this block to qb-core/client/functions.lua
+
+-- Multiple Add Items
+local function AddItems(items)
+    local shouldContinue = true
+    local message = "success"
+    local errorItem = nil
+
+    for key, value in pairs(items) do
+        if type(key) ~= "string" then
+            message = "invalid_item_name"
+            shouldContinue = false
+            errorItem = items[key]
+            break
+        end
+
+        if QBCore.Shared.Items[key] then
+            message = "item_exists"
+            shouldContinue = false
+            errorItem = items[key]
+            break
+        end
+
+        QBCore.Shared.Items[key] = value
+    end
+
+    if not shouldContinue then return false, message, errorItem end
+    TriggerClientEvent('QBCore:Client:OnSharedUpdateMultiple', -1, 'Items', items)
+    TriggerEvent('QBCore:Server:UpdateObject')
+    return true, message, nil
+end
+
+QBCore.Functions.AddItems = AddItems
+exports('AddItems', AddItems)
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+    -- insert into qbcore/functions.lua
+    -- insert into GetVehicleProperties function
+function QBCore.Functions.GetVehicleProperties(vehicle) -- do not include
+    if DoesEntityExist(vehicle) then -- do not include
+        local autodrive = {} -- copy lines below and add under "DoesEntityExist"
+
+        autodrive = { ["Id"] = vehicle, ["Order"] = 0, ["ad_destinations"] = false, ["ad_kit"] = false, ["ad_osd"] = false,
+        ["ad_speed"] = false, ["ad_styles"] = false, ["ad_tagger"] = false, } -- check this line if errors, remove it
+
+        if exports['ta-autodrive']:vehicleswithautodrive() == nil then
+            return
+        else
+            local taEx =exports['ta-autodrive']:vehicleswithautodrive() 
+
+            autodrive = taEx[vehicle]
+        end
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+-- insert into SetVehicleProperties function
+function QBCore.Functions.SetVehicleProperties(vehicle, props) -- do not include
+    if DoesEntityExist(vehicle) then -- do not include
+        if props.autodrive then  -- copy lines below and add under "DoesEntityExist"
+            local autodrive = props.autodrive
+        end
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+
+-- example product list
+-- insert into qb-shops Config.Products 
+    ["hardware"] = {
+        [1] = {
+            name = "ad_fob",
+            price = 10000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 1,
+        },
+        [2] = {
+            name = "ad_kit",
+            price = 5000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 2,
+        },
+        [3] = {
+            name = "ad_tagger",
+            price = 5000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 3,
+        },
+        [4] = {
+            name = "ad_speed",
+            price = 5000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 4,
+        },
+        [5] = {
+            name = "ad_styles",
+            price = 5000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 5,
+        },
+        [6] = {
+            name = "ad_destinations",
+            price = 5000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 6,
+        },
+        [7] = {
+            name = "ad_osd",
+            price = 5000,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 7,
+        },
+        [8] = {
+            name = "ad_darts",
+            price = 500,
+            amount = 50,
+            info = {},
+            type = "item",
+            slot = 8,
+        },
+    }
+
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+-----------------------------------------------------------------------------------------------
+     
 -- QBShared.Items
 
 ["ad_fob"] = {
@@ -153,106 +301,6 @@ ta-autodrive uses qb-core, qb-inventory, qb-menu, and qb-radialmenu
     ["combinable"]  = nil,
     ["description"] = "Take your hands off the wheel!"
 },
-
-
--- example product list
--- insert into qb-shops Config.Products 
-    ["hardware"] = {
-        [1] = {
-            name = "ad_fob",
-            price = 10000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 1,
-        },
-        [2] = {
-            name = "ad_kit",
-            price = 5000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 2,
-        },
-        [3] = {
-            name = "ad_tagger",
-            price = 5000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 3,
-        },
-        [4] = {
-            name = "ad_speed",
-            price = 5000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 4,
-        },
-        [5] = {
-            name = "ad_styles",
-            price = 5000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 5,
-        },
-        [6] = {
-            name = "ad_destinations",
-            price = 5000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 6,
-        },
-        [7] = {
-            name = "ad_osd",
-            price = 5000,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 7,
-        },
-        [8] = {
-            name = "ad_darts",
-            price = 500,
-            amount = 50,
-            info = {},
-            type = "item",
-            slot = 8,
-        },
-    }
-
-
-    -- insert into qbcore/functions.lua
-    -- insert into GetVehicleProperties function
-function QBCore.Functions.GetVehicleProperties(vehicle)
-    if DoesEntityExist(vehicle) then
-        local autodrive = {}
-
-        autodrive = { ["Id"] = vehicle, ["Order"] = 0, ["ad_destinations"] = false, ["ad_kit"] = false, ["ad_osd"] = false,
-        ["ad_speed"] = false, ["ad_styles"] = false, ["ad_tagger"] = false, } -- check this line if errors, remove it
-
-        if exports['ta-autodrive']:vehicleswithautodrive() == nil then
-            return
-        else
-            local taEx =exports['ta-autodrive']:vehicleswithautodrive() 
-
-            autodrive = taEx[vehicle]
-        end
-
--- insert into SetVehicleProperties function
-function QBCore.Functions.SetVehicleProperties(vehicle, props)
-    if DoesEntityExist(vehicle) then
-        if props.autodrive then
-            local autodrive = props.autodrive
-        end
-
-
-
-
-
 
 
 

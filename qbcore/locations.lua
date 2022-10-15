@@ -3,7 +3,126 @@
 ----------------------------------------------------------------------------------------------------------- Locations -------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
-blipIdTypes = {
+
+BlipColors = {
+    [0]  = 'White',
+    [1]  = 'Red',
+    [2]  = 'Green',
+    [3]  = 'Blue',
+    [4]  = 'White',
+    [5]  = 'Yellow',
+    [6]  = 'Light Red',
+    [7]  = 'Violet',
+    [8]  = 'Pink',
+    [9]  = 'Light Orange',
+    [10] = 'Light Brown',
+    [11] = 'Light Green',
+    [12] = 'Light Blue',
+    [13] = 'Light Purple',
+    [14] = 'Dark Purple',
+    [15] = 'Cyan',
+    [16] = 'Light Yellow',
+    [17] = 'Orange',
+    [18] = 'Light Blue',
+    [19] = 'Dark Pink',
+    [20] = 'Dark Yellow',
+    [21] = 'Dark Orange',
+    [22] = 'Light Gray',
+    [23] = 'Light Pink',
+    [24] = 'Lemon Green',
+    [25] = 'Forest Green',
+    [26] = 'Electric Blue',
+    [27] = 'Bright Purple',
+    [28] = 'Dark Yellow',
+    [29] = 'Dark Blue',
+    [30] = 'Dark Cyan',
+    [31] = 'Light Brown',
+    [32] = 'Light Blue',
+    [33] = 'Light Yellow',
+    [34] = 'Light Pink',
+    [35] = 'Light Red',
+    [36] = 'Beige',
+    [37] = 'White',
+    [38] = 'Blue',
+    [39] = 'Light Gray',
+    [40] = 'Dark Gray',
+    [41] = 'Pink Red',
+    [42] = 'Blue',
+    [43] = 'Light Green',
+    [44] = 'Light Orange',
+    [45] = 'White',
+    [46] = 'Gold',
+    [47] = 'Orange',
+    [48] = 'Brilliant Rose',
+    [49] = 'Red',
+    [50] = 'Medium Purple',
+    [51] = 'Salmon',
+    [52] = 'Dark Green',
+    [53] = 'Blizzard Blue',
+    [54] = 'Oracle Blue',
+    [55] = 'Silver',
+    [56] = 'Brown',
+    [57] = 'Blue',
+    [58] = 'East Bay',
+    [59] = 'Red',
+    [60] = 'Yellow Orange',
+    [61] = 'Mulberry Pink',
+    [62] = 'Alto Gray',
+    [63] = 'Jelly Bean Blue',
+    [64] = 'Dark Orange',
+    [65] = 'Mamba',
+    [66] = 'Yellow Orange',
+    [67] = 'Blue',
+    [68] = 'Blue',
+    [69] = 'Green',
+    [70] = 'Yellow Orange',
+    [71] = 'Yellow Orange',
+    [72] = 'Transparent Black',
+    [73] = 'Yellow Orange',
+    [74] = 'Blue',
+    [75] = 'Red',
+    [76] = 'Deep red',
+    [77] = 'Blue',
+    [78] = 'Oracle Blue',
+    [79] = 'Transparent Red',
+    [80] = 'Transparent Blue',
+    [81] = 'Orange',
+    [82] = 'Light Green',
+    [83] = 'Purple',
+    [84] = 'Blue',
+    [85] = 'Transparent Black',
+}
+
+--[[[2 (enemy)] = 'Red',
+
+[2 (friendly)] = 'Blue',
+
+[3 (enemy)] = 'Red',
+
+[4 (enemy)] = 'Red',
+
+[4 (friendly)] = 'Blue',
+
+[5 (enemy)] = 'Red',
+
+[5 (friendly)] = 'Blue',
+
+[49 (friendly)] = 'Blue',
+
+[66 (enemy)] = 'Red',
+
+[66 (friendly)] = 'Blue',
+
+[67 (enemy)] = 'Red',
+
+[68 (enemy)] = 'Red',
+
+[69 (enemy)] = 'Red',
+
+[69 (friendly)] = 'Blue',
+]]
+
+BlipIdTypes = {
 
     ['vehicle'] = 1,
     ['ped'] = 2,
@@ -760,57 +879,60 @@ BlipTypes = {
     [825] = 'radar_buffalo4',
     [826] = 'radar_agency',
 }
-
 function GetBlipSpriteFromName(blipName, tbl)
     local blipNum = nil
     for k, v in pairs(BlipTypes) do
         if v == blipName then
             blipNum = k
-            -- print("Active Blips: k", k, "v", v, "blipNum", blipNum, "blipName", blipName)
             break
         end
     end
     return blipNum
 end
-
-BlipDestination = {BlipNames = {}}
+BlipDestination = { BlipNames = {} }
 BlipDestination = {
     BlipNames = {
         Police = {
-            title  = "Police",
+            title  = "Police Station",
             id     = "police",
             name   = "radar_police_station",
-            sprite = 60,
+            sprite = GetBlipSpriteFromName('radar_police_station'), --60,
+            icon   = 'helmet-safety',
         },
         Hospital = {
             title  = "Hospital",
             id     = "hospital",
             name   = "radar_hospital",
             sprite = GetBlipSpriteFromName('radar_hospital'), --60,
+            icon   = 'helmet-safety',
         },
         Carwash = {
-            title = "Car Wash",
-            id = "carwash",
-            name = "radar_car_wash",
-            sprite = GetBlipSpriteFromName('radar_car_wash', BlipDestination.BlipNames), --100,
+            title  = "Car Wash",
+            id     = "carwash",
+            name   = "radar_car_wash",
+            sprite = GetBlipSpriteFromName('radar_car_wash'), --100,
+            icon   = 'helmet-safety',
         },
         Garage = {
-            title = "Garage",
-            id = "garage",
-            name = "radar_garage",
-            sprite = GetBlipSpriteFromName('radar_garage', BlipDestination.BlipNames), --357,
+            title  = "Garage",
+            id     = "garage",
+            name   = "radar_garage",
+            sprite = GetBlipSpriteFromName('radar_garage'), --357,
+            icon   = 'helmet-safety',
         }, --
         Fuel = {
-            title = "Fuel",
-            id = "fuel",
-            name = "radar_jerry_can",
-            sprite = GetBlipSpriteFromName("radar_jerry_can", BlipDestination.BlipNames), --361,
+            title  = "Fuel",
+            id     = "fuel",
+            name   = "radar_jerry_can",
+            sprite = GetBlipSpriteFromName("radar_jerry_can"), --361,
+            icon   = 'helmet-safety',
         },
         Hardware = {
             title  = "Hardware Shop",
             id     = "hardware",
             name   = "radar_repair",
             sprite = GetBlipSpriteFromName('radar_repair'), --402,
+            icon   = 'helmet-safety',
             coords = {
                 vector4(46.52, -1749.55, 29.64, 50.82),
                 vector4(2747.76, 3472.9, 55.67, 243.88),
@@ -822,12 +944,14 @@ BlipDestination = {
             id     = "bennys",
             name   = "radar_bennys",
             sprite = GetBlipSpriteFromName('radar_bennys'), --446,
+            icon   = 'helmet-safety',
         },
         Storeshop = {
             title  = "24/7 shop",
             id     = "garage",
             name   = "radar_crim_holdups" or 'radar_bat_cash_reg',
             sprite = GetBlipSpriteFromName("radar_crim_holdups") or GetBlipSpriteFromName("radar_bat_cash_reg"), --52,
+            icon   = 'helmet-safety',
             coords = {
                 vector4(24.5, -1346.19, 29.5, 266.78), -- Strawberry 24/7
                 vector4(-3039.91, 584.26, 7.91, 16.79),
@@ -843,16 +967,18 @@ BlipDestination = {
             }
         },
         Modshop = {
-            title = "Modshop",
-            id = "modshop",
-            name = "radar_car_mod_shop",
+            title  = "Modshop",
+            id     = "modshop",
+            name   = "radar_car_mod_shop",
             sprite = GetBlipSpriteFromName("radar_car_mod_shop", BlipDestination.BlipNames), --72,
+            icon   = 'helmet-safety',
         },
         Ammunation = {
             title  = "Ammunation",
             id     = "ammunation",
             name   = "radar_gr_w_upgrade" or 'radar_gun_shop',
-            sprite = GetBlipSpriteFromName("radar_gr_w_upgrade") or GetBlipSpriteFromName("radar_gun_shop") , --40,
+            sprite = GetBlipSpriteFromName("radar_gr_w_upgrade") or GetBlipSpriteFromName("radar_gun_shop"), --40,
+            icon   = 'helmet-safety',
             coords = {
                 vector4(808.94, -2158.99, 29.62, 330.26),
                 vector4(-660.98, -933.6, 21.83, 154.74),
@@ -871,20 +997,26 @@ BlipDestination = {
             id     = "bar",
             name   = "radar_bar",
             sprite = GetBlipSpriteFromName("radar_bar", BlipDestination.BlipNames), --93,
-            coords = {vector3(0, 0, 0), }
+            icon   = 'helmet-safety',
+
+            coords = { vector3(0, 0, 0), }
         },
         PDM = {
             title  = "Car Dealership",
             id     = "pdm",
             name   = "radar_getaway_car",
             sprite = GetBlipSpriteFromName("radar_getaway_car", BlipDestination.BlipNames), --93,
-            -- coords = {vector3(0, 0, 0), }
+            icon   = 'helmet-safety',
+            coords = {vector3(0, 0, 0), }
         },
+
         Casino = {
             title  = "Casino",
             id     = "casino",
             name   = "radar_bat_hack_jewel",
             sprite = GetBlipSpriteFromName("radar_bat_hack_jewel", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             -- coords = {vector3(0, 0, 0), }
         },
         Liquor = {
@@ -892,6 +1024,8 @@ BlipDestination = {
             id     = "liquor",
             name   = "radar_bat_cash_reg",
             sprite = GetBlipSpriteFromName("radar_bat_cash_reg", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             coords = {
                 vector4(-1221.38, -907.89, 12.33, 27.51),
                 vector4(-1486.82, -377.48, 40.16, 130.89),
@@ -905,6 +1039,8 @@ BlipDestination = {
             id     = "coffee",
             name   = "radar_bat_cash_reg",
             sprite = GetBlipSpriteFromName("radar_bat_cash_reg", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             coords = {
                 vector4(-628.97, 238.27, 81.9, 1.28),
                 vector4(126.55, -1028.12, 29.36, 343.0),
@@ -915,6 +1051,8 @@ BlipDestination = {
             id     = "blackmarket",
             name   = "radar_bat_cash_reg",
             sprite = GetBlipSpriteFromName("radar_bat_cash_reg", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             coords = {
                 vector4(776.24, 4184.08, 41.8, 92.12),
                 vector4(2482.51, 3722.28, 43.92, 39.98),
@@ -928,6 +1066,8 @@ BlipDestination = {
             id    = "jobtaxi",
             -- name = "radar_bat_cash_reg",
             -- sprite = GetBlipSpriteFromName("radar_bat_cash_reg", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             coords = {
             }
         },
@@ -936,6 +1076,8 @@ BlipDestination = {
             id    = "jobtrash",
             -- name = "radar_bat_cash_reg",
             -- sprite = GetBlipSpriteFromName("radar_bat_cash_reg", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             coords = {
             }
         },
@@ -944,6 +1086,8 @@ BlipDestination = {
             id    = "jobcarthief",
             -- name = "radar_bat_cash_reg",
             -- sprite = GetBlipSpriteFromName("radar_bat_cash_reg", BlipDestination.BlipNames), --93,
+        icon   = 'helmet-safety',
+
             coords = {
             }
         },
@@ -952,6 +1096,8 @@ BlipDestination = {
             id    = "cityhall",
             name  = "radar_pickup_armoured",
             sprite = GetBlipSpriteFromName("radar_pickup_armoured"), --93,
+        icon   = 'helmet-safety',
+
             coords = {
             }
         },
@@ -960,6 +1106,8 @@ BlipDestination = {
             id     = "weedshop",
             name   = "radar_pickup_weed" or "radar_production_weed" or "radar_weed_stash",
             sprite = GetBlipSpriteFromName("radar_pickup_weed") or GetBlipSpriteFromName("radar_production_weed") or GetBlipSpriteFromName("radar_weed_stash"), --93,
+        icon   = 'helmet-safety',
+
             coords = {
             }
         },
@@ -968,8 +1116,16 @@ BlipDestination = {
             id     = "apartment",
             name   = "radar_office",
             sprite = GetBlipSpriteFromName("radar_office"), --93,
+        icon   = 'helmet-safety',
+
             coords = {
             }
         },
     }
 }
+-- local TADev = exports['ta-dev']:GetTADevObject()
+-- TADev.Debug(BlipDestination, 0, "BlipDestination")
+
+-- fire 436
+-- 24/7 628
+-- hardware 402
