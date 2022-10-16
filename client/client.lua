@@ -134,6 +134,7 @@ end
 function TagVehicle()
     local playerPed = PlayerPedId()
     TargetVeh = Raycast(playerPed)
+    -- print("TagVehicle() TargetVeh", TargetVeh)
     PedInTaggedVehicle = GetPedInVehicleSeat(TargetVeh, -1)
     TaggedBlip = AddBlipForEntity(TargetVeh)                                                        	
     -- SetBlipFlashes(TaggedBlip, true)  
@@ -178,6 +179,13 @@ function CreateTag()
     end
 end
 
+function GetTaggedVehicle()
+    return TargetVeh
+end
+
+exports('GetTaggedVehicle', function()
+    return GetTaggedVehicle()
+end)
 -----------------------------------------------------------------------------------------------------------------------------------------
 -----------------------------------------------------------------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------- Hotkeys ---------------------

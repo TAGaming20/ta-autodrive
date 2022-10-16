@@ -2,8 +2,8 @@
 -- Registered Keymappings once enabled, won't delete after disabling
 -- Edit keymapping in \AppData\Roaming\CitizenFX\fivem.cfg
 -- ##############################################################################--
+local cmdPrint = false
 if ADDefaults.EnableCommands then
-    local cmdPrint = false
 -- ##########################################-------------------------------------- Trigger autodrive event command
 RegisterCommand(ADCommands.Start, function()
     if cmdPrint then print("Start Autodrive Command") end
@@ -40,17 +40,18 @@ end)
 -- ##########################################-------------------------------------- Speed up command
 RegisterCommand(ADCommands.SpeedUp, function(source, args, rawcommand)
     if cmdPrint then print("Speed up command") end
-    TriggerEvent(EventsTable.Speed.name, 'speedup')
+    TriggerEvent(EventsTable.Speed.name, ADCommands.SpeedUp)
 end)
 -- ##########################################-------------------------------------- Speed down command
 RegisterCommand(ADCommands.SpeedDown, function(source, args, rawcommand)
     if cmdPrint then print("Speed down command") end
-TriggerEvent(EventsTable.Speed.name, 'speeddown')
+TriggerEvent(EventsTable.Speed.name, ADCommands.SpeedDown)
 end)
 -- ##########################################-------------------------------------- Tag vehicle command
 RegisterCommand(ADCommands.Tag, function()
     if cmdPrint then print("Tag vehicle command") end
-    TriggerEvent(EventsTable.Tag.name, EventsTable.Tag.id)
+    -- print(EventsTable.Destination.name, DestTable.Args.Tag.id)
+    TriggerEvent(EventsTable.Destination.name, DestTable.Args.Tag.id)
 end)
 -- ##########################################-------------------------------------- Follow car toggle command
 
