@@ -45,19 +45,18 @@ end)
 -- ##########################################-------------------------------------- Speed down command
 RegisterCommand(ADCommands.SpeedDown, function(source, args, rawcommand)
     if cmdPrint then print("Speed down command") end
-TriggerEvent(EventsTable.Speed.name, ADCommands.SpeedDown)
+    TriggerEvent(EventsTable.Speed.name, ADCommands.SpeedDown)
 end)
 -- ##########################################-------------------------------------- Tag vehicle command
 RegisterCommand(ADCommands.Tag, function()
     if cmdPrint then print("Tag vehicle command") end
-    -- print(EventsTable.Destination.name, DestTable.Args.Tag.id)
     TriggerEvent(EventsTable.Destination.name, DestTable.Args.Tag.id)
 end)
 -- ##########################################-------------------------------------- Follow car toggle command
 
 RegisterCommand(ADCommands.Follow, function()
     if cmdPrint then print("Follow vehicle command") end
-    TriggerEvent(EventsTable.Destination, DestTable.Follow)
+    TriggerEvent(EventsTable.Destination.name, DestTable.Args.Follow.id)
 end)
 end
 -- ##########################################-------------------------------------- Registered Keymappings
