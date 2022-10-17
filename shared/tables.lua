@@ -99,6 +99,7 @@ EventsTable = {
 				'styles',
 				'speed',
 				'blips',
+				'postals'
 			},
 		},
 		close = 'ta-autodrive:client:qbmenu:closemenu'

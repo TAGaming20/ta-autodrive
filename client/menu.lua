@@ -254,7 +254,7 @@ function speedLimiter(menu)
     smiPostedSpeed.Activated = function(sender, item)
         if item == smiPostedSpeed then
             PostedLimits = true
-            TriggerEvent(eventSpeed, SpeedTable.Args.PostedSpeed.id)
+            TriggerEvent(eventSpeed, SpeedTable.Args.PostedLimits.id)
     end end
 
     -- Driving Style Submenu item 2 Manul Speed Limit

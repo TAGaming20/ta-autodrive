@@ -120,6 +120,7 @@ end
 
 RegisterNetEvent(EventsTable.Destination.name)
 AddEventHandler(EventsTable.Destination.name, function(destination, blipNum)
+    print("Event Triggered", destination)
     ----
     ---- Permissions
     ----
@@ -260,8 +261,11 @@ AddEventHandler(EventsTable.Destination.name, function(destination, blipNum)
         IsAutoDriveEnabled = true
         if destTag then
             CreateTag()
+            -- print("GetTaggedVehicle()", GetTaggedVehicle())
         elseif destFollow then
+            print("Dest == follow", dest)
             if IsVehicleTagged then
+
                 ChosenDrivingStyleName = StylesTable.Args.Code1.title
                 ChosenDrivingStyle     = get_value_for_key(Values, ChosenDrivingStyleName)
                 GameDestination        = DestTable.Args.Follow.id
@@ -423,6 +427,7 @@ end)
 
 RegisterNetEvent(EventsTable.Speed.name)
 AddEventHandler(EventsTable.Speed.name, function(dsSpeed)
+    print("Event Triggered: Speed: dsSpeed", dsSpeed)
     local playerPed = PlayerPedId()
     local playerVeh = GetVehiclePedIsIn(playerPed, false)
     local ped = nil
@@ -519,8 +524,6 @@ AddEventHandler(EventsTable.Settings.name, function(settingsData)
     local ped = nil
     ped = SetDriverPed()
     local settings = settingsData
-    local TADev = exports['ta-dev']:GetTADevObject()
-    TADev.Debug(settingsData, 0, "Settings Data from radial")
     if type(settings) == 'table' then settings = settingsData.id end
     if settings == 'osd' then
         if ADDefaults.OnScreenDisplay then

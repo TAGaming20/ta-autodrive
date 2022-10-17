@@ -4,7 +4,7 @@ game 'gta5'
 name "ta-autodrive"
 description "Autodrive script"
 author "Theory Affinity"
-version "2.0.0"
+version "2.9.0"
 
 shared_scripts {
 	'shared/config.lua',
@@ -23,9 +23,6 @@ client_scripts {
 	'client/autodriveradialmenu.lua',
 	'qbcore/locations.lua',
 	'qbcore/adclient-qb.lua',
-	-- 'client/startup.lua',
-	'client/client-dev.lua',
-	'qbcore/qb-debug.lua',
 }
 
 server_scripts {

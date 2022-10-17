@@ -40,12 +40,12 @@ end)
 -- ##########################################-------------------------------------- Speed up command
 RegisterCommand(ADCommands.SpeedUp, function(source, args, rawcommand)
     if cmdPrint then print("Speed up command") end
-    TriggerEvent(EventsTable.Speed.name, ADCommands.SpeedUp)
+    TriggerEvent(EventsTable.Speed.name, 'speedup')
 end)
 -- ##########################################-------------------------------------- Speed down command
 RegisterCommand(ADCommands.SpeedDown, function(source, args, rawcommand)
     if cmdPrint then print("Speed down command") end
-    TriggerEvent(EventsTable.Speed.name, ADCommands.SpeedDown)
+    TriggerEvent(EventsTable.Speed.name, 'speeddown')
 end)
 -- ##########################################-------------------------------------- Tag vehicle command
 RegisterCommand(ADCommands.Tag, function()

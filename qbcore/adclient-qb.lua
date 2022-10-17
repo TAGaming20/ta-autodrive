@@ -8,10 +8,12 @@ if not ADDefaults.UseQBCore then return end
 
 local QBCore = exports['qb-core']:GetCoreObject()
 
+-- local TADev = exports['ta-dev']:GetTADevObject()
 RegisterNetEvent('QBCore:Client:UpdateObject', function()
 	QBCore = exports['qb-core']:GetCoreObject()
 end)
 
+-- TADev.Debug(QBCore.Shared.Items['ad_fob'])
 -- -- ############################################################################################# Metatable
 
 -- Create metatable
@@ -403,8 +405,8 @@ RegisterNetEvent(EventsTable.QBMenu.Submenu.name, function(submenu)
                 header = DestTable.Args.Postal.title,
                 icon = string.format('fa-solid fa-%s', DestTable.Args.Postal.icon),
                 params = {
-                    event = event,
-                    args = DestTable.Args.Postal.id
+                    event = EventsTable.QBMenu.Submenu.name,
+                    args = 'postals'
                 }
             },
             { -- Follow
@@ -568,6 +570,37 @@ RegisterNetEvent(EventsTable.QBMenu.Submenu.name, function(submenu)
         }
 
         exports['qb-menu']:openMenu(staffList) -- open our menu
+    end
+
+    -- ##############################################################################-- Blips QB Menu
+
+    if submenu == 'postals' then
+        local event = EventsTable.Destination.name
+        exports['qb-menu']:openMenu({
+            { -- Settings
+                isMenuHeader = true,
+                header = 'Postals Menu',
+                txt = 'Special Delivery',
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Postal.icon),
+            },
+            { -- Postal
+                header = DestTable.Args.Postal.title,
+                icon = string.format('fa-solid fa-%s', DestTable.Args.Postal.icon),
+                params = {
+                    event = event,
+                    args = DestTable.Args.Postal.id
+                }
+            },
+            { -- Clear Postal
+                header = 'Clear Postal',
+                -- txt = tostring(ADDefaults.OSDtimed):gsub("^%l", string.upper),
+                icon = string.format('fa-solid fa-%s', SettingsTable.Args.TimedOsd.icon),
+                params = {
+                    event = ExecuteCommand('postal'),
+                    -- args = SettingsTable.Args.TimedOsd.id
+                }
+            },
+        })
     end
 
     -- ##############################################################################-- Settings QB Menu
