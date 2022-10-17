@@ -8,12 +8,10 @@ if not ADDefaults.UseQBCore then return end
 
 local QBCore = exports['qb-core']:GetCoreObject()
 
-local TADev = exports['ta-dev']:GetTADevObject()
 RegisterNetEvent('QBCore:Client:UpdateObject', function()
 	QBCore = exports['qb-core']:GetCoreObject()
 end)
 
--- TADev.Debug(QBCore.Shared.Items['ad_fob'])
 -- -- ############################################################################################# Metatable
 
 -- Create metatable
